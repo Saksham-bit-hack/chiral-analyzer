@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiral Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://3Dmol.js.org/build/3Dmol.js"></script>
+    <style>
+        body, html {
+            background-color: #1e1e2f;
+            color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .nav-tabs .nav-link {
+            background-color: #2a2a3a;
+            border: none;
+            color: #f8f9fa;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        .card {
+            background-color: #2a2a3a;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .error {
+            color: #dc3545;
+        }
+        #history {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Chiral Analyzer</h1>
+        <input type="text" id="searchBar" class="form-control" placeholder="Search for a molecule...">
+        <button id="searchBtn" class="btn btn-custom mt-3">Search</button>
+        <div class="loading">Loading...</div>
+        <div class="error"></div>
+        <ul class="nav nav-tabs" id="analysisTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#overview" data-bs-toggle="tab">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#stereochemistry" data-bs-toggle="tab">Stereochemistry</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#properties" data-bs-toggle="tab">Properties</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#structure" data-bs-toggle="tab">Structure</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="overview">
+                <h3>Overview</h3>
+                <p id="overviewContent"></p>
+            </div>
+            <div class="tab-pane fade" id="stereochemistry">
+                <h3>Stereochemistry</h3>
+                <div id="stereochemistryContent"></div>
+            </div>
+            <div class="tab-pane fade" id="properties">
+                <h3>Properties</h3>
+                <div id="propertiesContent"></div>
+            </div>
+            <div class="tab-pane fade" id="structure">
+                <h3>Structure</h3>
+                <div id="3DmolViewer" style="width: 100%; height: 400px;"></div>
+            </div>
+        </div>
+        <div id="history">
+            <h3>Search History</h3>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            updateHistory();
+
+            $('#searchBtn').click(function() {
+                const query = $('#searchBar').val();
+                if (query) {
+                    loadMoleculeData(query);
+                }
+            });
+
+            function loadMoleculeData(query) {
+                $('.loading').show();
+                $('.error').hide();
+
+                // Example API integration (replace with your API)
+                $.ajax({
+                    url: `https://api.example.com/molecule?query=${query}`,
+                    method: 'GET',
+                    success: function(data) {
+                        $('.loading').hide();
+                        $('#overviewContent').text(data.overview);
+                        // Handle other data...
+                        addToHistory(query);
+                        visualize3D(data.structure);
+                    },
+                    error: function() {
+                        $('.loading').hide();
+                        $('.error').text('Error fetching data. Please try again.').show();
+                    }
+                });
+            }
+
+            function visualize3D(structure) {
+                var viewer = $3Dmol.createViewer('3DmolViewer', {'defaultmodels':[{model: structure}]});
+                viewer.setBackgroundColor('white');
+                viewer.zoomTo();
+                viewer.render();
+            }
+
+            function addToHistory(query) {
+                if (!searchHistory.includes(query)) {
+                    searchHistory.push(query);
+                    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                    updateHistory();
+                }
+            }
+
+            function updateHistory() {
+                $('#historyList').empty();
+                searchHistory.forEach(function(item) {
+                    $('#historyList').append(`<li>${item}</li>`);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
