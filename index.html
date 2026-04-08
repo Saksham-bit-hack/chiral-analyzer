@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChiralChem — Molecular Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #020305;
+  --deep: #060810;
+  --dark: #0b0d14;
+  --panel: #0f1118;
+  --lift: #141720;
+  --raise: #1a1e2b;
+  --rim: rgba(255,255,255,0.055);
+  --rim2: rgba(255,255,255,0.1);
+  --rim3: rgba(255,255,255,0.18);
+  --ink: #f0f2ff;
+  --ink2: #9fa5c0;
+  --ink3: #5a6080;
+  --neon: #00e5ff;
+  --neon2: #00b4cc;
+  --lime: #a8ff3e;
+  --lime2: #7acc1f;
+  --amber: #ffb340;
+  --rose: #ff4d6d;
+  --violet: #9d4edd;
+  --sky: #38bdf8;
+  --r-col: #4fc3f7;
+  --s-col: #ff8a65;
+  --ez-e: #a8ff3e;
+  --ez-z: #c77dff;
+  --font-head: 'Clash Display', sans-serif;
+  --font-body: 'Cabinet Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --rad: 14px;
+  --rad-sm: 8px;
+  --glow: 0 0 40px rgba(0,229,255,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ═══ ANIMATED BACKGROUND ═══ */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-canvas canvas { width: 100%; height: 100%; }
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  animation: orbFloat 20s ease-in-out infinite;
+}
+.orb1 { width: 600px; height: 600px; background: rgba(0,229,255,0.04); top: -200px; left: -200px; animation-delay: 0s; }
+.orb2 { width: 500px; height: 500px; background: rgba(168,255,62,0.03); bottom: -150px; right: -100px; animation-delay: -7s; }
+.orb3 { width: 400px; height: 400px; background: rgba(157,78,221,0.04); top: 40%; left: 60%; animation-delay: -14s; }
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+/* ═══ LAYOUT ═══ */
+#app { position: relative; z-index: 1; }
+
+/* ═══ HEADER ═══ */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(2,3,5,0.8);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--rim);
+  height: 58px;
+  display: flex; align-items: center;
+  padding: 0 2rem;
+  gap: 2rem;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.logo-hex {
+  width: 32px; height: 32px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.logo-hex svg { width: 32px; height: 32px; }
+
+.logo-name { color: var(--ink); }
+.logo-name em { color: var(--neon); font-style: normal; }
+
+.nav-tabs {
+  display: flex; gap: 4px;
+  flex: 1;
+}
+
+.nav-tab {
+  background: none; border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: var(--ink3);
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-tab:hover { color: var(--ink2); background: var(--rim); }
+.nav-tab.active { color: var(--neon); background: rgba(0,229,255,0.08); }
+.nav-tab .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+
+.header-right {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--lift);
+  border: 1px solid var(--rim);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+}
+
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.status-dot.offline { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ═══ MAIN ═══ */
+main { max-width: 1600px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+/* ═══ HERO ═══ */
+.hero {
+  text-align: center;
+  padding: 5rem 1rem 4rem;
+  position: relative;
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(168,255,62,0.06));
+  border: 1px solid rgba(0,229,255,0.18);
+  border-radius: 100px;
+  padding: 5px 16px 5px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--neon);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  animation: fadeSlideDown 0.6s ease both;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--neon);
+  box-shadow: 0 0 10px var(--neon);
+  animation: blink 1.5s ease infinite;
+}
+
+@keyframes fadeSlideDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeSlideUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+
+h1 {
+  font-family: var(--font-head);
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.25rem;
+  animation: fadeSlideUp 0.7s 0.1s ease both;
+}
+
+h1 .line1 { color: var(--ink); display: block; }
+h1 .line2 {
+  display: block;
+  background: linear-gradient(90deg, var(--neon) 0%, var(--lime) 50%, var(--neon) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeSlideUp 0.7s 0.15s ease both, shimmer 4s linear infinite;
+}
+
+@keyframes shimmer { to { background-position: 200% center; } }
+
+.hero-sub {
+  color: var(--ink3);
+  font-size: 1.05rem;
+  max-width: 560px;
+  margin: 0 auto 3rem;
+  font-weight: 400;
+  animation: fadeSlideUp 0.7s 0.2s ease both;
+}
+
+/* ═══ SEARCH ═══ */
+.search-universe {
+  max-width: 760px;
+  margin: 0 auto;
+  animation: fadeSlideUp 0.7s 0.3s ease both;
+}
+
+.search-shell {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.search-shell:focus-within {
+  border-color: var(--neon);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.1), 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.search-icon {
+  padding: 0 0 0 1.25rem;
+  color: var(--ink3);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.search-icon svg { width: 18px; height: 18px; }
+
+#query {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  padding: 1.1rem 1rem;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+#query::placeholder { color: var(--ink3); font-family: var(--font-body); letter-spacing: 0; }
+
+.search-type-badge {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(0,229,255,0.1);
+  color: var(--neon);
+  border: 1px solid rgba(0,229,255,0.2);
+  flex-shrink: 0;
+  transition: all 0.2s;
+  margin-right: 8px;
+}
+
+.search-type-badge.smiles { background: rgba(168,255,62,0.1); color: var(--lime); border-color: rgba(168,255,62,0.2); }
+
+#analyze-btn {
+  background: linear-gradient(135deg, var(--neon), var(--neon2));
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  margin: 5px;
+  padding: 10px 22px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+
+#analyze-btn:hover { transform: scale(1.02); box-shadow: 0 0 24px rgba(0,229,255,0.35); }
+#analyze-btn:active { transform: scale(0.97); }
+#analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+#analyze-btn svg { width: 15px; height: 15px; }
+
+/* Autocomplete */
+.autocomplete {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0; right: 0;
+  background: var(--panel);
+  border: 1px solid var(--rim2);
+  border-radius: var(--rad);
+  overflow: hidden;
+  z-index: 300;
+  display: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: dropIn 0.18s ease;
+}
+.autocomplete.show { display: block; }
+@keyframes dropIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+.ac-item {
+  padding: 10px 1.25rem;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  transition: background 0.1s;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--rim);
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.focused { background: rgba(0,229,255,0.06); }
+.ac-icon { color: var(--neon); font-size: 11px; font-family: var(--font-mono); opacity: 0.7; }
+.ac-name { color: var(--ink); flex: 1; }
+.ac-type { font-size: 0.68rem; font-family: var(--font-mono); color: var(--ink3); }
+
+/* Quick chips */
+.quick-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.qchip {
+  background: var(--lift);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.qchip:hover { border-color: var(--neon); color: var(--neon); background: rgba(0,229,255,0.05); transform: translateY(-1px); }
+
+/* Options row */
+.options-row {
+  display: flex; gap: 1.5rem; justify-content: center; align-items: center;
+  margin-top: 1.25rem;
+  font-size: 0.8rem; color: var(--ink3);
+}
+
+.opt-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; transition: color 0.15s; }
+.opt-toggle:hover { color: var(--ink2); }
+
+.sw {
+  width: 36px; height: 20px;
+  background: var(--lift);
+  border: 1px solid var(--rim2);
+  border-radius: 100px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.sw.on { background: var(--neon); border-color: var(--neon); }
+.sw::after {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 14px; height: 14px;
+  background: var(--void);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.sw.on::after { transform: translateX(16px); background: #000; }
+
+/* ═══ HISTORY BAR ═══ */
+.history-strip {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 1.5rem;
+  min-height: 0;
+}
+
+.hist-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--lift);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  padding: 4px 10px 4px 8px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hist-pill:hover { border-color: var(--rim2); color: var(--ink2); }
+.hist-pill .hi { color: var(--neon); font-size: 9px; }
+.hist-pill .hx { margin-left: 2px; opacity: 0; transition: opacity 0.15s; font-size: 10px; color: var(--rose); }
+.hist-pill:hover .hx { opacity: 1; }
+
+/* ═══ STATE PANELS ═══ */
+.state-panel {
+  text-align: center;
+  padding: 5rem 2rem;
+  display: none;
+}
+.state-panel.show { display: block; }
+
+.loader-ring {
+  width: 60px; height: 60px;
+  border: 2px solid var(--rim2);
+  border-top-color: var(--neon);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.load-label {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--neon);
+  letter-spacing: 0.08em;
+}
+
+.load-steps { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.load-step {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.78rem; color: var(--ink3);
+  font-family: var(--font-mono);
+  transition: color 0.3s;
+}
+.load-step.done { color: var(--lime); }
+.load-step.active { color: var(--neon); }
+.step-icon { width: 16px; text-align: center; }
+
+.err-box {
+  display: inline-flex; flex-direction: column; gap: 0.5rem;
+  align-items: center;
+  background: rgba(255,77,109,0.07);
+  border: 1px solid rgba(255,77,109,0.2);
+  border-radius: var(--rad);
+  padding: 2rem 3rem;
+}
+.err-title { color: var(--rose); font-weight: 600; font-size: 1rem; }
+.err-msg { color: var(--ink3); font-size: 0.85rem; font-family: var(--font-mono); }
+.err-retry {
+  margin-top: 0.75rem;
+  background: rgba(255,77,109,0.12);
+  border: 1px solid rgba(255,77,109,0.3);
+  border-radius: 8px;
+  padding: 7px 18px;
+  color: var(--rose);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+}
+.err-retry:hover { background: rgba(255,77,109,0.2); }
+
+/* ═══ RESULTS ═══ */
+#results { display: none; animation: fadeSlideUp 0.5s ease; }
+#results.show { display: block; }
+
+/* ═══ COMPOUND BANNER ═══ */
+.compound-banner {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1.5rem; flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.compound-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon), var(--lime), transparent);
+}
+
+.cb-left { flex: 1; min-width: 0; }
+
+.cb-name {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 0.4rem;
+}
+
+.cb-smiles {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink3);
+  word-break: break-all;
+  max-width: 700px;
+  padding: 6px 10px;
+  background: var(--deep);
+  border-radius: 6px;
+  border: 1px solid var(--rim);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  display: inline-block;
+  margin-top: 4px;
+}
+.cb-smiles:hover { border-color: var(--rim2); }
+
+.cb-tags {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid;
+}
+.tag-cyan { background: rgba(0,229,255,0.08); color: var(--neon); border-color: rgba(0,229,255,0.2); }
+.tag-lime { background: rgba(168,255,62,0.08); color: var(--lime); border-color: rgba(168,255,62,0.2); }
+.tag-amber{ background: rgba(255,179,64,0.08); color: var(--amber); border-color: rgba(255,179,64,0.2); }
+.tag-rose { background: rgba(255,77,109,0.08); color: var(--rose); border-color: rgba(255,77,109,0.2); }
+.tag-violet{background: rgba(157,78,221,0.08); color: var(--violet); border-color: rgba(157,78,221,0.2); }
+.tag-sky  { background: rgba(56,189,248,0.08); color: var(--sky); border-color: rgba(56,189,248,0.2); }
+
+.cb-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: flex-start; }
+
+.act-btn {
+  background: var(--lift);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: var(--ink3);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+.act-btn:hover { border-color: var(--rim2); color: var(--ink); background: var(--raise); }
+.act-btn.primary { border-color: rgba(0,229,255,0.3); color: var(--neon); background: rgba(0,229,255,0.06); }
+.act-btn.primary:hover { background: rgba(0,229,255,0.12); }
+
+/* ═══ SECTION TABS ═══ */
+.section-tabs {
+  display: flex; gap: 4px;
+  background: var(--deep);
+  border: 1px solid var(--rim);
+  border-radius: var(--rad);
+  padding: 4px;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.stab {
+  flex-shrink: 0;
+  background: none; border: none;
+  padding: 8px 16px;
+  border-radius: 9px;
+  color: var(--ink3);
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.stab:hover { color: var(--ink2); }
+.stab.active { background: var(--panel); color: var(--neon); box-shadow: 0 1px 8px rgba(0,0,0,0.3); }
+.stab .cnt {
+  background: rgba(0,229,255,0.15);
+  color: var(--neon);
+  border-radius: 100px;
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+}
+
+/* ═══ SECTION VIEWS ═══ */
+.sec-view { display: none; }
+.sec-view.active { display: block; animation: fadeSlideUp 0.3s ease; }
+
+/* ═══ LAYOUT GRIDS ═══ */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.grid-12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.25rem; }
+.grid-21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+
+@media(max-width:1100px){
+  .grid-2,.grid-3,.grid-12,.grid-21 { grid-template-columns: 1fr; }
+}
+@media(max-width:700px){
+  h1 { font-size: 2.4rem; }
+  .grid-2,.grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ═══ PANEL ═══ */
+.pnl {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.pnl:hover { border-color: var(--rim2); }
+
+.pnl-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--rim);
+}
+
+.pnl-title {
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.pnl-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--neon);
+  box-shadow: 0 0 8px var(--neon);
+}
+
+.pnl-bd { padding: 1.25rem; }
+
+/* ═══ 2D STRUCTURE ═══ */
+.struct-2d {
+  background: #030407;
+  border-radius: 12px;
+  min-height: 300px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.struct-2d svg {
+  width: 100%; height: auto; max-height: 320px;
+  transition: transform 0.3s;
+}
+.struct-2d:hover svg { transform: scale(1.02); }
+
+.struct-note {
+  position: absolute; bottom: 8px; right: 10px;
+  font-size: 0.65rem; color: var(--ink3); font-family: var(--font-mono);
+}
+
+/* ═══ 3D VIEWER ═══ */
+#v3d {
+  background: #030407;
+  border-radius: 12px;
+  height: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+.v3d-controls {
+  display: flex; gap: 6px; margin-top: 0.75rem; flex-wrap: wrap;
+}
+
+.vbtn {
+  flex: 1; min-width: 60px;
+  background: var(--deep);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  padding: 6px;
+  color: var(--ink3);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.vbtn:hover { background: var(--lift); color: var(--ink2); }
+.vbtn.on { border-color: var(--neon); color: var(--neon); background: rgba(0,229,255,0.08); }
+
+/* ═══ PROPERTY CARDS ═══ */
+.prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.prop-card {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: border-color 0.2s, transform 0.15s;
+  cursor: default;
+}
+.prop-card:hover { border-color: var(--rim2); transform: translateY(-1px); }
+
+.prop-lbl {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 5px;
+}
+.prop-val {
+  font-size: 1.25rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+.prop-unit { font-size: 0.7rem; color: var(--ink3); margin-left: 3px; font-weight: 400; }
+
+/* ═══ DRUG-LIKENESS RADAR ═══ */
+.radar-wrap { position: relative; height: 280px; }
+
+/* ═══ LIPINSKI ═══ */
+.lip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lip-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--dark);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--rim);
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+}
+.lip-ok { color: var(--lime); font-size: 12px; }
+.lip-fail { color: var(--rose); font-size: 12px; }
+
+/* ═══ STEREOCHEMISTRY ═══ */
+.stereo-hero {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+@media(max-width:600px){ .stereo-hero { grid-template-columns: repeat(2,1fr); } }
+
+.sh-card {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.sh-num {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.sh-lbl {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chiral-cards { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
+.chiral-cards::-webkit-scrollbar { width: 4px; }
+.chiral-cards::-webkit-scrollbar-thumb { background: var(--lift); border-radius: 2px; }
+
+.cc-item {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color 0.15s;
+}
+.cc-item:hover { border-color: var(--rim2); }
+
+.cc-badge {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cc-R { background: rgba(79,195,247,0.12); color: var(--r-col); border: 1px solid rgba(79,195,247,0.25); }
+.cc-S { background: rgba(255,138,101,0.12); color: var(--s-col); border: 1px solid rgba(255,138,101,0.25); }
+.cc-U { background: rgba(90,96,128,0.15); color: var(--ink3); border: 1px solid var(--rim); }
+
+.cc-info { flex: 1; min-width: 0; }
+.cc-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 3px; }
+.cc-sub { font-size: 0.72rem; color: var(--ink3); font-family: var(--font-mono); }
+
+.cc-explain {
+  font-size: 0.72rem;
+  background: var(--dark);
+  border-left: 2px solid var(--rim2);
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  color: var(--ink3);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* EZ bonds */
+.ez-items { display: flex; flex-direction: column; gap: 8px; }
+.ez-item {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.8rem;
+}
+.ez-tag {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.ez-E { background: rgba(168,255,62,0.12); color: var(--ez-e); }
+.ez-Z { background: rgba(199,125,255,0.12); color: var(--ez-z); }
+
+/* ═══ FUNCTIONAL GROUPS ═══ */
+.fg-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.fg-card {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+  cursor: default;
+}
+.fg-card:hover { border-color: var(--rim2); transform: translateY(-1px); }
+.fg-name { font-weight: 500; color: var(--ink); }
+.fg-cnt {
+  background: rgba(0,229,255,0.1);
+  color: var(--neon);
+  border-radius: 100px;
+  padding: 1px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+/* ═══ IDENTIFIERS ═══ */
+.id-rows { display: flex; flex-direction: column; gap: 0; }
+.id-row {
+  display: flex; gap: 1rem;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--rim);
+  align-items: flex-start;
+}
+.id-row:last-child { border-bottom: none; }
+.id-key {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink3);
+  width: 130px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.id-val {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink);
+  word-break: break-all;
+  flex: 1;
+  line-height: 1.5;
+}
+.id-copy {
+  background: none; border: none;
+  color: var(--ink3); cursor: pointer;
+  font-size: 11px; padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+.id-copy:hover { color: var(--neon); background: rgba(0,229,255,0.06); }
+
+/* ═══ COMPARE ═══ */
+.compare-setup {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1rem; margin-bottom: 1.5rem;
+}
+@media(max-width:600px){ .compare-setup { grid-template-columns: 1fr; } }
+
+.cmp-inp-grp { display: flex; flex-direction: column; gap: 8px; }
+.cmp-lbl { font-size: 0.72rem; font-family: var(--font-mono); color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; }
+.cmp-inp {
+  background: var(--panel);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cmp-inp:focus { border-color: var(--neon); }
+
+.cmp-results { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+@media(max-width:700px){ .cmp-results { grid-template-columns: 1fr; } }
+
+.cmp-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.cmp-hd {
+  background: var(--lift);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--rim);
+}
+.cmp-molecule { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; }
+.cmp-formula { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink3); margin-top: 2px; }
+
+.cmp-body { padding: 1.25rem; }
+
+.cmp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rim);
+  font-size: 0.82rem;
+}
+.cmp-row:last-child { border-bottom: none; }
+.cmp-rk { color: var(--ink3); font-family: var(--font-mono); }
+.cmp-rv { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+.cmp-rv.hi { color: var(--lime); }
+.cmp-rv.lo { color: var(--rose); }
+
+.diff-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--deep);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.diff-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--neon);
+  transition: width 0.8s ease;
+}
+
+/* ═══ PHYSCHEM CHART ═══ */
+.chart-wrap { position: relative; height: 300px; }
+
+/* ═══ SIMILARITY SEARCH ═══ */
+.sim-query {
+  display: flex; gap: 10px; margin-bottom: 1.25rem;
+}
+.sim-inp {
+  flex: 1;
+  background: var(--dark);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  outline: none;
+}
+.sim-inp:focus { border-color: var(--neon); }
+
+.sim-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.sim-card {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.sim-card:hover { border-color: var(--rim2); transform: translateY(-2px); }
+.sim-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+.sim-formula { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink3); }
+.sim-score { font-family: var(--font-mono); font-size: 0.78rem; color: var(--lime); margin-top: 6px; }
+
+/* ═══ EDUCATION ═══ */
+.edu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.edu-card {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.15s;
+}
+.edu-card:hover { border-color: var(--rim2); transform: translateY(-2px); }
+.edu-icon { font-size: 1.75rem; margin-bottom: 1rem; }
+.edu-title { font-family: var(--font-head); font-weight: 700; font-size: 1rem; margin-bottom: 0.6rem; }
+.edu-body { font-size: 0.82rem; color: var(--ink3); line-height: 1.75; }
+.edu-body strong { color: var(--neon); font-weight: 600; }
+
+/* ═══ NOTATION ═══ */
+.notation-list { display: flex; flex-direction: column; gap: 8px; }
+.notation-item {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex; gap: 12px;
+}
+.notation-sym {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--neon);
+  width: 30px;
+  flex-shrink: 0;
+}
+.notation-exp { font-size: 0.82rem; color: var(--ink3); }
+
+/* ═══ PKAS / ADMET ═══ */
+.admet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.admet-card {
+  background: var(--dark);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+.admet-val {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.admet-lbl {
+  font-size: 0.68rem;
+  color: var(--ink3);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.admet-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  margin-top: 6px;
+}
+.admet-ok { background: rgba(168,255,62,0.1); color: var(--lime); }
+.admet-warn { background: rgba(255,179,64,0.1); color: var(--amber); }
+.admet-bad { background: rgba(255,77,109,0.1); color: var(--rose); }
+
+/* ═══ FORMULA DISPLAY ═══ */
+.formula-big {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.formula-big sub { font-size: 1rem; color: var(--ink3); }
+
+/* ═══ TOAST ═══ */
+#toast {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  background: var(--panel);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 0.82rem;
+  color: var(--neon);
+  font-family: var(--font-mono);
+  z-index: 9999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* ═══ SCROLLBAR ═══ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--lift); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--raise); }
+
+/* ═══ 3Dmol fix ═══ */
+#v3d canvas { border-radius: 12px !important; }
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+
+<div id="app">
+<header>
+  <a class="logo" href="#">
+    <div class="logo-hex">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" stroke="url(#hg)" stroke-width="1.5" fill="rgba(0,229,255,0.04)"/>
+        <path d="M16 8L22 11.5V18.5L16 22L10 18.5V11.5L16 8Z" fill="rgba(0,229,255,0.15)" stroke="url(#hg)" stroke-width="1"/>
+        <circle cx="16" cy="15" r="2.5" fill="url(#hg)"/>
+        <defs>
+          <linearGradient id="hg" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#00e5ff"/>
+            <stop offset="1" stop-color="#a8ff3e"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <span class="logo-name">Chiral<em>Chem</em></span>
+  </a>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('analyze')"><span class="dot"></span> Analyze</button>
+    <button class="nav-tab" onclick="showPage('compare')"><span class="dot"></span> Compare</button>
+    <button class="nav-tab" onclick="showPage('learn')"><span class="dot"></span> Learn</button>
+  </div>
+
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-txt">PubChem Live</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══ PAGE: ANALYZE ═══ -->
+<div id="page-analyze">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">RDKit · PubChem · CIP Stereochemistry · 3Dmol.js</div>
+    <h1>
+      <span class="line1">Molecular Intelligence</span>
+      <span class="line2">at Atomic Precision</span>
+    </h1>
+    <p class="hero-sub">Enter any compound name or SMILES string. Get complete stereochemistry, drug-likeness, 3D visualization, and more — instantly.</p>
+
+    <div class="search-universe">
+      <div class="search-shell">
+        <div class="search-icon">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="7.5" cy="7.5" r="5"/>
+            <path d="m12 12 4 4"/>
+          </svg>
+        </div>
+        <input type="text" id="query" placeholder="Ritonavir, Ibuprofen, or CC(C)Cc1ccc(C(C)C(=O)O)cc1..." autocomplete="off" spellcheck="false"/>
+        <span class="search-type-badge" id="type-badge">NAME</span>
+        <button id="analyze-btn" onclick="doAnalyze()">
+          <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7.5 2v11M2 7.5h11"/>
+          </svg>
+          Analyze
+        </button>
+        <div class="autocomplete" id="autocomplete"></div>
+      </div>
+
+      <div class="quick-row">
+        <span class="qchip" onclick="q('Ritonavir')">Ritonavir</span>
+        <span class="qchip" onclick="q('Thalidomide')">Thalidomide</span>
+        <span class="qchip" onclick="q('Taxol')">Taxol (Paclitaxel)</span>
+        <span class="qchip" onclick="q('Ibuprofen')">Ibuprofen</span>
+        <span class="qchip" onclick="q('Morphine')">Morphine</span>
+        <span class="qchip" onclick="q('Aspirin')">Aspirin</span>
+        <span class="qchip" onclick="q('Cholesterol')">Cholesterol</span>
+        <span class="qchip" onclick="q('CC[C@@H](O)C(=O)O')">SMILES →</span>
+      </div>
+
+      <div class="options-row">
+        <div class="opt-toggle" onclick="toggleOpt('h3d')">
+          <div class="sw" id="sw-h3d"></div>
+          Auto-gen 3D
+        </div>
+        <div class="opt-toggle" onclick="toggleOpt('hiso')">
+          <div class="sw on" id="sw-hiso"></div>
+          Isomeric SMILES
+        </div>
+        <div class="opt-toggle" onclick="toggleOpt('hsave')">
+          <div class="sw on" id="sw-hsave"></div>
+          Save history
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <div class="history-strip" id="hist-strip"></div>
+
+  <!-- Loading -->
+  <div class="state-panel" id="loading-panel">
+    <div class="loader-ring"></div>
+    <div class="load-label" id="load-lbl">INITIALIZING...</div>
+    <div class="load-steps">
+      <div class="load-step" id="ls-1"><span class="step-icon">○</span> Querying PubChem database</div>
+      <div class="load-step" id="ls-2"><span class="step-icon">○</span> Fetching molecular properties</div>
+      <div class="load-step" id="ls-3"><span class="step-icon">○</span> Analyzing stereochemistry</div>
+      <div class="load-step" id="ls-4"><span class="step-icon">○</span> Generating 2D structure</div>
+      <div class="load-step" id="ls-5"><span class="step-icon">○</span> Building 3D conformation</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="state-panel" id="error-panel">
+    <div class="err-box">
+      <div class="err-title">⚠ Analysis Failed</div>
+      <div class="err-msg" id="err-msg">Compound not found</div>
+      <button class="err-retry" onclick="doAnalyze()">↺ Retry</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- Banner -->
+    <div class="compound-banner">
+      <div class="cb-left">
+        <div class="cb-name" id="r-name">—</div>
+        <div class="cb-smiles" id="r-smiles" onclick="copyText(this.textContent)" title="Click to copy"></div>
+        <div class="cb-tags" id="r-tags"></div>
+      </div>
+      <div class="cb-actions">
+        <button class="act-btn" onclick="downloadJSON()">⬇ JSON</button>
+        <button class="act-btn" onclick="downloadReport()">⬇ Report</button>
+        <button class="act-btn" onclick="downloadSDF()">⬇ SDF</button>
+        <button class="act-btn primary" onclick="openPubChem()">↗ PubChem</button>
+      </div>
+    </div>
+
+    <!-- Section tabs -->
+    <div class="section-tabs">
+      <button class="stab active" onclick="showSec('overview')">Overview</button>
+      <button class="stab" onclick="showSec('stereo')">Stereochemistry <span class="cnt" id="stab-stereo-cnt">0</span></button>
+      <button class="stab" onclick="showSec('props')">Properties</button>
+      <button class="stab" onclick="showSec('structure')">Structures</button>
+      <button class="stab" onclick="showSec('admet')">ADMET</button>
+      <button class="stab" onclick="showSec('groups')">Func. Groups <span class="cnt" id="stab-fg-cnt">0</span></button>
+      <button class="stab" onclick="showSec('ids')">Identifiers</button>
+    </div>
+
+    <!-- ── OVERVIEW ── -->
+    <div class="sec-view active" id="sec-overview">
+      <div class="grid-2" style="margin-bottom:1.25rem">
+
+        <!-- 2D Structure -->
+        <div class="pnl">
+          <div class="pnl-hd">
+            <span class="pnl-title"><span class="pnl-dot"></span> 2D Structure</span>
+            <span style="font-size:0.68rem;color:var(--ink3);font-family:var(--font-mono)">● amber = stereocenter</span>
+          </div>
+          <div class="pnl-bd">
+            <div class="struct-2d" id="struct2d">
+              <span style="color:var(--ink3);font-size:0.85rem">No structure</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D Viewer -->
+        <div class="pnl">
+          <div class="pnl-hd">
+            <span class="pnl-title"><span class="pnl-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet)"></span> 3D Conformation</span>
+            <span style="font-size:0.68rem;color:var(--ink3)">drag · scroll · right-click</span>
+          </div>
+          <div class="pnl-bd">
+            <div id="v3d"></div>
+            <div class="v3d-controls">
+              <button class="vbtn on" id="vb-stick" onclick="v3style('stick')">Stick</button>
+              <button class="vbtn" id="vb-sphere" onclick="v3style('sphere')">CPK</button>
+              <button class="vbtn" id="vb-line" onclick="v3style('line')">Wire</button>
+              <button class="vbtn" id="vb-cross" onclick="v3style('cross')">Cross</button>
+              <button class="vbtn" id="vb-surf" onclick="v3style('surf')">Surface</button>
+              <button class="vbtn" id="vb-spin" onclick="v3spin()">⟳ Spin</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick stats row -->
+      <div class="pnl" style="margin-bottom:1.25rem">
+        <div class="pnl-bd" style="padding:1rem 1.25rem">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px" id="quick-stats"></div>
+        </div>
+      </div>
+
+      <!-- Stereo summary in overview -->
+      <div class="pnl">
+        <div class="pnl-hd">
+          <span class="pnl-title"><span class="pnl-dot" style="background:var(--r-col);box-shadow:0 0 8px var(--r-col)"></span> Stereochemistry Snapshot</span>
+          <span class="tag tag-cyan" id="ov-stereo-desc" style="font-size:0.68rem"></span>
+        </div>
+        <div class="pnl-bd">
+          <div class="stereo-hero" id="ov-stereo-hero"></div>
+          <div class="chiral-cards" id="ov-chiral-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEREOCHEMISTRY ── -->
+    <div class="sec-view" id="sec-stereo">
+      <div class="grid-2" style="margin-bottom:1.25rem">
+        <div class="pnl">
+          <div class="pnl-hd">
+            <span class="pnl-title"><span class="pnl-dot" style="background:var(--r-col);box-shadow:0 0 8px var(--r-col)"></span> Chiral Centers (CIP R/S)</span>
+            <span id="st-total-badge" class="tag tag-cyan" style="font-size:0.68rem"></span>
+          </div>
+          <div class="pnl-bd">
+            <div class="stereo-hero" id="st-hero" style="margin-bottom:1.25rem"></div>
+            <div class="chiral-cards" id="st-chiral-list" style="max-height:500px"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="pnl" style="margin-bottom:1.25rem">
+            <div class="pnl-hd">
+              <span class="pnl-title"><span class="pnl-dot" style="background:var(--ez-e);box-shadow:0 0 8px var(--ez-e)"></span> E/Z Isomerism</span>
+            </div>
+            <div class="pnl-bd">
+              <div class="ez-items" id="st-ez-list"></div>
+            </div>
+          </div>
+
+          <div class="pnl">
+            <div class="pnl-hd">
+              <span class="pnl-title"><span class="pnl-dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> Stereoisomer Analysis</span>
+            </div>
+            <div class="pnl-bd" id="st-isomer-info"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pnl">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--sky)"></span> CIP Priority Rules — How R/S is determined</span></div>
+        <div class="pnl-bd">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+            <div style="background:var(--dark);border:1px solid var(--rim);border-radius:12px;padding:1rem">
+              <div style="font-family:var(--font-head);font-weight:700;color:var(--neon);margin-bottom:0.5rem;font-size:0.9rem">Step 1 — Rank Substituents</div>
+              <div style="font-size:0.78rem;color:var(--ink3);line-height:1.7">Assign priority 1–4 based on atomic number. Highest atomic number = highest priority (1). Ties broken by looking outward through bonds.</div>
+            </div>
+            <div style="background:var(--dark);border:1px solid var(--rim);border-radius:12px;padding:1rem">
+              <div style="font-family:var(--font-head);font-weight:700;color:var(--lime);margin-bottom:0.5rem;font-size:0.9rem">Step 2 — Orient Molecule</div>
+              <div style="font-size:0.78rem;color:var(--ink3);line-height:1.7">Point the lowest priority (4) group away from you. View the remaining three groups in order 1→2→3.</div>
+            </div>
+            <div style="background:var(--dark);border:1px solid var(--rim);border-radius:12px;padding:1rem">
+              <div style="font-family:var(--font-head);font-weight:700;color:var(--amber);margin-bottom:0.5rem;font-size:0.9rem">Step 3 — Assign Config</div>
+              <div style="font-size:0.78rem;color:var(--ink3);line-height:1.7"><strong style="color:var(--r-col)">R (Rectus)</strong> = clockwise rotation 1→2→3. <strong style="color:var(--s-col)">S (Sinister)</strong> = counterclockwise rotation 1→2→3.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROPERTIES ── -->
+    <div class="sec-view" id="sec-props">
+      <div class="grid-2" style="margin-bottom:1.25rem">
+        <div class="pnl">
+          <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> Physical Properties</span></div>
+          <div class="pnl-bd">
+            <div class="prop-grid" id="phys-props"></div>
+          </div>
+        </div>
+
+        <div class="pnl">
+          <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--lime);box-shadow:0 0 8px var(--lime)"></span> Drug-likeness Radar</span></div>
+          <div class="pnl-bd">
+            <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="pnl">
+          <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--sky)"></span> Lipinski Rule of Five</span></div>
+          <div class="pnl-bd">
+            <div class="lip-grid" id="lip-grid"></div>
+            <div id="lip-verdict" style="margin-top:1rem;padding:1rem;border-radius:10px;font-size:0.82rem;font-family:var(--font-mono)"></div>
+          </div>
+        </div>
+
+        <div class="pnl">
+          <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet)"></span> Extended Drug Rules</span></div>
+          <div class="pnl-bd" id="ext-rules"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STRUCTURE ── -->
+    <div class="sec-view" id="sec-structure">
+      <div class="grid-2" style="margin-bottom:1.25rem">
+        <div class="pnl">
+          <div class="pnl-hd">
+            <span class="pnl-title"><span class="pnl-dot"></span> 2D Structure — Full View</span>
+            <button class="act-btn" onclick="downloadSVG()">⬇ SVG</button>
+          </div>
+          <div class="pnl-bd">
+            <div class="struct-2d" id="struct2d-full" style="min-height:400px"></div>
+          </div>
+        </div>
+
+        <div class="pnl">
+          <div class="pnl-hd">
+            <span class="pnl-title"><span class="pnl-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet)"></span> 3D View — Full</span>
+          </div>
+          <div class="pnl-bd">
+            <div id="v3d-full" style="background:#030407;border-radius:12px;height:400px"></div>
+            <div class="v3d-controls" style="margin-top:0.75rem">
+              <button class="vbtn on" id="vbf-stick" onclick="v3fstyle('stick')">Stick</button>
+              <button class="vbtn" id="vbf-sphere" onclick="v3fstyle('sphere')">CPK</button>
+              <button class="vbtn" id="vbf-line" onclick="v3fstyle('line')">Wire</button>
+              <button class="vbtn" id="vbf-surf" onclick="v3fstyle('surf')">Surface</button>
+              <button class="vbtn" id="vbf-label" onclick="v3flabel()">Labels</button>
+              <button class="vbtn" id="vbf-spin" onclick="v3fspin()">⟳ Spin</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Molecular formula large display -->
+      <div class="pnl">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--ink3)"></span> Molecular Formula</span></div>
+        <div class="pnl-bd" style="text-align:center;padding:2rem">
+          <div class="formula-big" id="formula-big"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMET ── -->
+    <div class="sec-view" id="sec-admet">
+      <div class="pnl" style="margin-bottom:1.25rem">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--rose);box-shadow:0 0 8px var(--rose)"></span> ADMET Predictions (Estimated)</span></div>
+        <div class="pnl-bd">
+          <div class="admet-grid" id="admet-grid"></div>
+          <div style="margin-top:1rem;padding:0.75rem 1rem;background:var(--dark);border-radius:8px;border:1px solid var(--rim);font-size:0.75rem;color:var(--ink3);font-family:var(--font-mono)">
+            ⚠ ADMET values are rule-based estimates derived from molecular descriptors. Not suitable for clinical decision-making.
+          </div>
+        </div>
+      </div>
+
+      <div class="pnl">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--amber)"></span> Property Profile Chart</span></div>
+        <div class="pnl-bd">
+          <div class="chart-wrap"><canvas id="prop-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FUNCTIONAL GROUPS ── -->
+    <div class="sec-view" id="sec-groups">
+      <div class="pnl" style="margin-bottom:1.25rem">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--lime);box-shadow:0 0 8px var(--lime)"></span> Detected Functional Groups</span></div>
+        <div class="pnl-bd"><div class="fg-wrap" id="fg-wrap"></div></div>
+      </div>
+
+      <div class="pnl">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--sky)"></span> Functional Group Reference</span></div>
+        <div class="pnl-bd">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px" id="fg-ref"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── IDENTIFIERS ── -->
+    <div class="sec-view" id="sec-ids">
+      <div class="pnl">
+        <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--ink3)"></span> Chemical Identifiers</span></div>
+        <div class="pnl-bd"><div class="id-rows" id="id-rows"></div></div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /page-analyze -->
+
+<!-- ═══ PAGE: COMPARE ═══ -->
+<div id="page-compare" style="display:none;padding-top:2rem">
+  <div class="pnl" style="margin-bottom:1.5rem">
+    <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--lime)"></span> Molecule Comparison</span></div>
+    <div class="pnl-bd">
+      <div class="compare-setup">
+        <div class="cmp-inp-grp">
+          <div class="cmp-lbl">Molecule A</div>
+          <input class="cmp-inp" id="cmp-a" placeholder="Ibuprofen, or SMILES..." />
+        </div>
+        <div class="cmp-inp-grp">
+          <div class="cmp-lbl">Molecule B</div>
+          <input class="cmp-inp" id="cmp-b" placeholder="Naproxen, or SMILES..." />
+        </div>
+      </div>
+      <div style="text-align:center">
+        <button id="cmp-btn" class="act-btn primary" style="font-size:0.9rem;padding:10px 28px" onclick="doCompare()">
+          Compare Molecules →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cmp-loading" class="state-panel">
+    <div class="loader-ring"></div>
+    <div class="load-label">COMPARING...</div>
+  </div>
+
+  <div class="cmp-results" id="cmp-results"></div>
+
+  <div id="cmp-diff-panel" style="display:none;margin-top:1.25rem">
+    <div class="pnl">
+      <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--amber)"></span> Property Differences</span></div>
+      <div class="pnl-bd">
+        <div class="chart-wrap"><canvas id="diff-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: LEARN ═══ -->
+<div id="page-learn" style="display:none;padding-top:2rem">
+  <div class="pnl" style="margin-bottom:1.5rem">
+    <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--violet)"></span> Stereochemistry & Chirality</span></div>
+    <div class="pnl-bd">
+      <div class="edu-grid">
+        <div class="edu-card">
+          <div class="edu-icon">🔄</div>
+          <div class="edu-title">What is Chirality?</div>
+          <div class="edu-body">A molecule is chiral if it cannot be superimposed on its mirror image. The term comes from the Greek <strong>χείρ (kheir)</strong>, meaning hand. Your hands are mirror images of each other — chiral molecules work the same way. The stereocenter is usually a carbon bonded to four different groups.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🏷</div>
+          <div class="edu-title">CIP R/S Rules</div>
+          <div class="edu-body">Cahn–Ingold–Prelog (CIP) assigns <strong>R</strong> (rectus, clockwise) or <strong>S</strong> (sinister, counterclockwise) to each stereocenter. Rank substituents 1→4 by atomic number. Orient the lowest-priority group away from you. Read the remaining three: clockwise = R, counterclockwise = S.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">⚗️</div>
+          <div class="edu-title">Why Stereochemistry Matters</div>
+          <div class="edu-body"><strong>Thalidomide</strong> — the R-enantiomer is sedative; S causes teratogenicity. <strong>Ibuprofen</strong> — S-enantiomer is the active analgesic. <strong>L-DOPA</strong> treats Parkinson's; D-DOPA is toxic. Stereochemistry is critical to drug discovery and biochemistry.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">↔️</div>
+          <div class="edu-title">E/Z Isomerism</div>
+          <div class="edu-body">Double bonds cannot rotate freely. <strong>E</strong> (entgegen, "opposite") — higher priority groups on opposite sides. <strong>Z</strong> (zusammen, "together") — same side. This replaces the older cis/trans nomenclature for most compounds and is determined by CIP priority at each doubly-bonded atom.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🧬</div>
+          <div class="edu-title">Enantiomers vs Diastereomers</div>
+          <div class="edu-body"><strong>Enantiomers</strong> — mirror images, all stereocenters inverted, identical physical properties except optical rotation. <strong>Diastereomers</strong> — stereoisomers that are not mirror images, differ in physical and chemical properties. A molecule with n stereocenters has up to <strong>2ⁿ</strong> possible stereoisomers.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">💊</div>
+          <div class="edu-title">Lipinski Rule of Five</div>
+          <div class="edu-body">Christopher Lipinski's heuristic for oral bioavailability: MW ≤ <strong>500 Da</strong>, LogP ≤ <strong>5</strong>, H-bond donors ≤ <strong>5</strong>, H-bond acceptors ≤ <strong>10</strong>. Compounds passing ≥ 3 rules tend to be orally bioavailable. Exceptions exist for natural products and biologics.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">📐</div>
+          <div class="edu-title">TPSA & Permeability</div>
+          <div class="edu-body"><strong>Topological Polar Surface Area (TPSA)</strong> — sum of surfaces of polar atoms. TPSA &lt; 60 Å² predicts good CNS penetration. TPSA &lt; 140 Å² predicts good oral absorption. TPSA &gt; 140 Å² suggests poor membrane permeability.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🧮</div>
+          <div class="edu-title">LogP & Lipophilicity</div>
+          <div class="edu-body"><strong>LogP</strong> = log of the partition coefficient between octanol and water. Measures lipophilicity. LogP 0–3 often ideal for drugs. Too high (>5) → poor solubility, toxicity. Too low (&lt;−2) → poor membrane penetration. Related: LogD accounts for ionization at physiological pH.</div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🔬</div>
+          <div class="edu-title">SMILES Notation</div>
+          <div class="edu-body"><strong>SMILES</strong> (Simplified Molecular-Input Line-Entry System) encodes molecular structure as a string. Atoms by symbol, bonds by notation. <strong>@</strong> and <strong>@@</strong> encode tetrahedral chirality. <strong>/</strong> and <strong>\</strong> encode double bond geometry. Isomeric SMILES includes stereochemistry; canonical SMILES is standardized.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pnl" style="margin-bottom:1.5rem">
+    <div class="pnl-hd"><span class="pnl-title"><span class="pnl-dot" style="background:var(--neon)"></span> SMILES Notation Reference</span></div>
+    <div class="pnl-bd">
+      <div class="notation-list">
+        <div class="notation-item"><span class="notation-sym">C</span><span class="notation-exp">Carbon atom (aliphatic). Uppercase = non-aromatic. Hydrogen count inferred by valence.</span></div>
+        <div class="notation-item"><span class="notation-sym">c</span><span class="notation-exp">Aromatic carbon. Lowercase = aromatic atom. Must be part of aromatic ring.</span></div>
+        <div class="notation-item"><span class="notation-sym">=</span><span class="notation-exp">Double bond. C=C is an alkene, C=O is carbonyl. No symbol = single bond.</span></div>
+        <div class="notation-item"><span class="notation-sym">#</span><span class="notation-exp">Triple bond. C#C is alkyne, C#N is nitrile.</span></div>
+        <div class="notation-item"><span class="notation-sym">@</span><span class="notation-exp">Tetrahedral chirality — anticlockwise (S in most cases). [C@@H] is clockwise from hydrogen side.</span></div>
+        <div class="notation-item"><span class="notation-sym">/\</span><span class="notation-exp">Double bond geometry. C/C=C/C is E (trans). C/C=C\C is Z (cis).</span></div>
+        <div class="notation-item"><span class="notation-sym">[]</span><span class="notation-exp">Bracket atoms — for charged, isotope-labeled, or unusual valence atoms. [NH4+], [13C], [Fe+2].</span></div>
+        <div class="notation-item"><span class="notation-sym">1–9</span><span class="notation-exp">Ring closure digits. C1CCCCC1 = cyclohexane. Matching numbers form a bond.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG — set API_BASE to your FastAPI server address
+// ═══════════════════════════════════════════════════════════════
+const API_BASE = 'http://127.0.0.1:8000';  // ← change to Render URL when deployed
+const PUBCHEM = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug';
+const PUBCHEM_VIEW = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug_view';
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let DATA = null;
+let viewer = null, viewerFull = null;
+let radarChart = null, propChart = null, diffChart = null;
+let spinInterval = null, spinFInterval = null;
+let opts = { h3d: false, hiso: true, hsave: true };
+let history = JSON.parse(localStorage.getItem('cc_hist') || '[]');
+let acFocus = -1;
+let v3labels = false;
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderHistory();
+  checkAPIStatus();
+
+  const inp = document.getElementById('query');
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { closeAC(); doAnalyze(); }
+    if (e.key === 'Escape') closeAC();
+    if (e.key === 'ArrowDown') acMove(1);
+    if (e.key === 'ArrowUp') acMove(-1);
+  });
+
+  inp.addEventListener('input', () => {
+    const v = inp.value.trim();
+    updateTypeBadge(v);
+    if (v.length >= 2 && !isSMILES(v)) debounceAC(v);
+    else closeAC();
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#query') && !e.target.closest('#autocomplete')) closeAC();
+  });
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      inp.focus(); inp.select();
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SMILES DETECTION
+// ═══════════════════════════════════════════════════════════════
+function isSMILES(s) {
+  const special = (s.match(/[()=\[\]#@\\\/+\-0-9.%]/g) || []).length;
+  return special / s.length > 0.15 || /[()\[\]=#@]/.test(s);
+}
+
+function updateTypeBadge(v) {
+  const b = document.getElementById('type-badge');
+  if (!v) { b.textContent = 'NAME'; b.className = 'search-type-badge'; return; }
+  if (isSMILES(v)) { b.textContent = 'SMILES'; b.className = 'search-type-badge smiles'; }
+  else { b.textContent = 'NAME'; b.className = 'search-type-badge'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTOCOMPLETE
+// ═══════════════════════════════════════════════════════════════
+let acTimer = null;
+function debounceAC(v) {
+  clearTimeout(acTimer);
+  acTimer = setTimeout(() => fetchAC(v), 280);
+}
+
+async function fetchAC(q) {
+  try {
+    const r = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(q)}/JSON?limit=7`);
+    const d = await r.json();
+    const items = d?.dictionary_terms?.compound || [];
+    showAC(items);
+  } catch { closeAC(); }
+}
+
+function showAC(items) {
+  const box = document.getElementById('autocomplete');
+  if (!items.length) { closeAC(); return; }
+  acFocus = -1;
+  box.innerHTML = items.map((s,i) => `
+    <div class="ac-item" data-val="${esc(s)}" onclick="pickAC('${esc(s)}')">
+      <span class="ac-icon">⬡</span>
+      <span class="ac-name">${s}</span>
+      <span class="ac-type">compound</span>
+    </div>`).join('');
+  box.classList.add('show');
+}
+
+function closeAC() { document.getElementById('autocomplete').classList.remove('show'); acFocus = -1; }
+
+function pickAC(v) { document.getElementById('query').value = v; closeAC(); doAnalyze(); }
+
+function acMove(dir) {
+  const items = document.querySelectorAll('.ac-item');
+  if (!items.length) return;
+  acFocus = Math.max(-1, Math.min(items.length-1, acFocus + dir));
+  items.forEach((el,i) => el.classList.toggle('focused', i === acFocus));
+  if (acFocus >= 0) document.getElementById('query').value = items[acFocus].dataset.val;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API STATUS — checks both your backend AND PubChem
+// ═══════════════════════════════════════════════════════════════
+async function checkAPIStatus() {
+  const dot = document.getElementById('api-status-dot');
+  const txt = document.getElementById('api-status-txt');
+
+  // First check your RDKit backend
+  try {
+    const r = await fetch(`${API_BASE}/analyze?query=water`, { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.success) {
+        dot.className = 'status-dot';
+        txt.textContent = 'RDKit + PubChem';
+        return;
+      }
+    }
+  } catch {}
+
+  // Fall back to PubChem-only check
+  try {
+    const r = await fetch(`${PUBCHEM}/compound/name/water/property/MolecularWeight/JSON`,
+      { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      dot.className = 'status-dot';
+      txt.textContent = 'PubChem Only';
+      return;
+    }
+  } catch {}
+
+  dot.className = 'status-dot offline';
+  txt.textContent = 'Offline';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN ANALYSIS PIPELINE — Backend-first, PubChem enrichment
+// ═══════════════════════════════════════════════════════════════
+console.log("Analyze clicked");
+async function doAnalyze() {
+  const raw = document.getElementById('query').value.trim();
+  if (!raw) return;
+
+  showPanel('loading');
+  hideResults();
+  scrollToState();
+  setStep(0);
+  document.getElementById('load-lbl').textContent = 'INITIALIZING...';
+
+  try {
+    // ── STEP 1: Hit your RDKit backend ──────────────────────────
+    setStep(1, 'active');
+    document.getElementById('load-lbl').textContent = 'CALLING RDKIT BACKEND...';
+
+    console.log('Starting analysis for:', raw);
+    let backendData = null;
+    try {
+      console.log('Fetching from:', `${API_BASE}/analyze?query=${encodeURIComponent(raw)}`);
+      const br = await fetch(`${API_BASE}/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          input: raw
+        })
+      });
+      console.log('Fetch response status:', br.status);
+      if (br.ok) {
+        backendData = await br.json();
+        console.log('Backend response:', backendData);
+        if (!backendData.success) {
+          console.log('Backend returned success=false');
+          backendData = null;
+        }
+      } else {
+        console.log('Fetch failed with status:', br.status);
+      }
+    } catch (fetchErr) {
+      console.log('Fetch error:', fetchErr);
+    }
+
+    if (!backendData) {
+      throw new Error('Backend analysis failed');
+    }
+
+    setStep(1, 'done');
+
+    // ── STEP 2: Process backend data ─────────────────────────────
+    setStep(2, 'active');
+    document.getElementById('load-lbl').textContent = 'PROCESSING RESULTS...';
+
+    const bd = backendData.data;
+    const smiles = bd.smiles;
+    const name = bd.query;
+    const formula = bd.formula;
+    const props = {
+      mw: bd.molecular_weight,
+      exactMass: bd.exact_mass,
+      logp: bd.logp,
+      tpsa: bd.tpsa,
+      hbd: bd.hbd,
+      hba: bd.hba,
+      rotBonds: bd.rot_bonds,
+      rings: bd.rings,
+      heavyAtoms: bd.heavy_atoms,
+      formula: bd.formula,
+    };
+
+    setStep(2, 'done');
+
+    // ── STEP 3: Finalize ─────────────────────────────────────────
+    setStep(3, 'active');
+    document.getElementById('load-lbl').textContent = 'FINALIZING...';
+
+    // Use backend data directly
+    const stereo = bd.stereo;
+    const fgroups = bd.functional_groups;
+    const lipinski = bd.lipinski;
+
+    setStep(3, 'done');
+
+    // ── Assemble final DATA object ───────────────────────────────
+    DATA = {
+      raw: bd.query,
+      name: name,
+      smiles: smiles,
+      formula: formula,
+      props: props,
+      stereo: stereo,
+      fgroups: fgroups,
+      admet: computeADMET(props),
+      identifiers: bd.identifiers,
+      lipinski: lipinski,
+      _backend: backendData,
+    };
+
+    // ── Render ───────────────────────────────────────────────────
+    console.log('About to call renderAll with DATA:', DATA);
+    showPanel('none');
+    renderAll(DATA);
+    console.log('renderAll completed');
+    showResults();
+    console.log('showResults completed');
+    if (opts.hsave) addHistory(raw);
+
+    // Show backend badge in status pill
+    const statusTxt = document.getElementById('api-status-txt');
+    const statusDot = document.getElementById('api-status-dot');
+    const query = document.getElementById("query").value;
+    console.log("Query:", query);
+    if (backendData) {
+      statusTxt.textContent = 'RDKit + PubChem';
+      statusDot.className = 'status-dot';
+    } else {
+      statusTxt.textContent = 'PubChem Only';
+      statusDot.className = 'status-dot';
+    }
+
+  } catch (err) {
+    showPanel('error');
+    document.getElementById('err-msg').textContent = err.message || 'Unknown error';
+    console.error('[ChiralChem]', err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROPERTY FETCHING
+// ═══════════════════════════════════════════════════════════════
+async function fetchFullProps(cid, smiles) {
+  const props = {};
+
+  if (cid) {
+    try {
+      const fields = 'MolecularWeight,ExactMass,XLogP,TPSA,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,HeavyAtomCount,Complexity,MolecularFormula,IsomericSMILES,InChI,InChIKey';
+      const r = await fetch(`${PUBCHEM}/compound/cid/${cid}/property/${fields}/JSON`);
+      if (r.ok) {
+        const d = await r.json();
+        const p = d.PropertyTable.Properties[0];
+        props.mw = p.MolecularWeight;
+        props.exactMass = p.ExactMass;
+        props.logp = p.XLogP;
+        props.tpsa = p.TPSA;
+        props.hbd = p.HBondDonorCount;
+        props.hba = p.HBondAcceptorCount;
+        props.rotBonds = p.RotatableBondCount;
+        props.heavyAtoms = p.HeavyAtomCount;
+        props.complexity = p.Complexity;
+        props.formula = p.MolecularFormula;
+        props.inchi = p.InChI;
+        props.inchikey = p.InChIKey;
+        props.isoSmiles = p.IsomericSMILES;
+      }
+    } catch {}
+  }
+
+  // Estimate from SMILES if missing
+  if (!props.mw) props.mw = estimateMW(smiles);
+  if (!props.logp) props.logp = estimateLogP(smiles);
+
+  // Derived
+  props.rings = countRings(smiles);
+  props.aromaticRings = countAromaticRings(smiles);
+  props.chiralCenters = (smiles.match(/@/g) || []).length;
+
+  return props;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEREOCHEMISTRY ANALYSIS (pure JS, CIP-aware)
+// ═══════════════════════════════════════════════════════════════
+function analyzeStereo(smiles) {
+  const chiral = [];
+  const ez = [];
+  let r = 0, s = 0, unassigned = 0;
+
+  // Detect @ and @@ (tetrahedral stereocenters from SMILES)
+  // Regex to find all chiral centers in SMILES
+  const chiralPattern = /\[([A-Z][a-z]?)(@{1,2})(H?)\]/g;
+  let m, idx = 0;
+  while ((m = chiralPattern.exec(smiles)) !== null) {
+    const atom = m[1];
+    const tag = m[2]; // @ or @@
+    // In isomeric SMILES, @ = CCW = S, @@ = CW = R (heuristic, varies with context)
+    // True CIP requires full graph traversal — we use SMILES convention here
+    const config = tag === '@@' ? 'R' : 'S';
+    chiral.push({ atom_index: idx, symbol: atom, cip_code: config, chiral_tag: tag === '@@' ? 'CW' : 'CCW', neighbors: ['?','?','?','?'] });
+    if (config === 'R') r++;
+    else s++;
+    idx++;
+  }
+
+  // Detect /\ for E/Z
+  const doublePattern = /([A-Za-z])(\/|\\)([A-Za-z])/g;
+  let bondIdx = 0;
+  const bonds = [];
+  while ((m = doublePattern.exec(smiles)) !== null) {
+    bonds.push({ dir: m[2], pos: m.index });
+  }
+  // Pair consecutive /\ patterns around C=C
+  const ezPattern = /(\/|\\)[A-Za-z][^/\\]*=[^/\\]*[A-Za-z](\/|\\)/g;
+  while ((m = ezPattern.exec(smiles)) !== null) {
+    const d1 = m[1], d2 = m[2];
+    const stereo = (d1 === d2) ? 'Z' : 'E';
+    ez.push({ bond_index: bondIdx++, begin_atom: '?', end_atom: '?', stereo });
+  }
+
+  return {
+    chiral_centers: chiral,
+    ez_bonds: ez,
+    total_chiral_centers: chiral.length,
+    assigned: chiral.length,
+    r_centers: r,
+    s_centers: s,
+    unassigned: 0,
+    e_bonds: ez.filter(b=>b.stereo==='E').length,
+    z_bonds: ez.filter(b=>b.stereo==='Z').length,
+    max_stereoisomers: Math.pow(2, chiral.length) || 1,
+    descriptor: buildDescriptor(r, s, ez),
+    is_chiral: chiral.length > 0
+  };
+}
+
+function buildDescriptor(r, s, ez) {
+  if (!r && !s) return 'Achiral';
+  let d = [];
+  if (r) d.push(`${r}R`);
+  if (s) d.push(`${s}S`);
+  return d.join(',');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNCTIONAL GROUP DETECTION
+// ═══════════════════════════════════════════════════════════════
+const FG_DEFS = [
+  { name: 'Hydroxyl (–OH)', re: /(?<![A-Z])O(?!H|[A-Z])/g, color: 'tag-cyan' },
+  { name: 'Carboxylic Acid', re: /C\(=O\)O(?!C)/g, color: 'tag-lime' },
+  { name: 'Ester', re: /C\(=O\)O[A-Z]/g, color: 'tag-amber' },
+  { name: 'Aldehyde', re: /C\(=O\)\[H\]|CHO/g, color: 'tag-violet' },
+  { name: 'Ketone', re: /[A-Z]C\(=O\)[A-Z]/g, color: 'tag-amber' },
+  { name: 'Amine', re: /N(?!O)\[?H?/g, color: 'tag-sky' },
+  { name: 'Amide', re: /C\(=O\)N/g, color: 'tag-sky' },
+  { name: 'Nitro', re: /\[N\+\]\(=O\)\[O-\]|\[NH\+\]\(=O\)/g, color: 'tag-rose' },
+  { name: 'Aromatic Ring', re: /c1ccc/g, color: 'tag-cyan' },
+  { name: 'Halogen (F)', re: /F(?![a-z])/g, color: 'tag-lime' },
+  { name: 'Halogen (Cl)', re: /Cl(?![a-z])/g, color: 'tag-lime' },
+  { name: 'Halogen (Br)', re: /Br(?![a-z])/g, color: 'tag-amber' },
+  { name: 'Halogen (I)', re: /\bI(?![a-z])/g, color: 'tag-rose' },
+  { name: 'Thiol (–SH)', re: /S(?!O|i)\[?H/g, color: 'tag-amber' },
+  { name: 'Sulfide', re: /[A-Z]S[A-Z]/g, color: 'tag-amber' },
+  { name: 'Sulfonamide', re: /S\(=O\)\(=O\)N/g, color: 'tag-violet' },
+  { name: 'Sulfone', re: /S\(=O\)\(=O\)/g, color: 'tag-violet' },
+  { name: 'Phosphate', re: /P\(=O\)/g, color: 'tag-rose' },
+  { name: 'Alkene (C=C)', re: /[A-Z]=[A-Z](?!O)/g, color: 'tag-lime' },
+  { name: 'Alkyne (C≡C)', re: /C#C/g, color: 'tag-sky' },
+  { name: 'Epoxide', re: /C1OC1/g, color: 'tag-violet' },
+  { name: 'Ether (–O–)', re: /[A-Z]O[A-Z]/g, color: 'tag-cyan' },
+  { name: 'Nitrile', re: /C#N/g, color: 'tag-rose' },
+];
+
+function detectFGroups(smiles) {
+  return FG_DEFS.map(g => {
+    g.re.lastIndex = 0;
+    const matches = smiles.match(g.re) || [];
+    return matches.length ? { name: g.name, count: matches.length, color: g.color } : null;
+  }).filter(Boolean);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMET ESTIMATION
+// ═══════════════════════════════════════════════════════════════
+function computeADMET(props) {
+  const mw = props.mw || 300;
+  const logp = props.logp || 2;
+  const tpsa = props.tpsa || 80;
+  const hbd = props.hbd || 2;
+  const hba = props.hba || 5;
+  const rb = props.rotBonds || 5;
+
+  // Rule-based predictions
+  const bioav = (mw <= 500 && logp <= 5 && hbd <= 5 && hba <= 10) ? 'High' : mw <= 700 ? 'Moderate' : 'Low';
+  const cns = (tpsa < 60 && mw < 450 && logp > 0 && logp < 5) ? 'Penetrant' : 'Non-penetrant';
+  const sol = logp < 1 ? 'High' : logp < 3 ? 'Moderate' : logp < 5 ? 'Low' : 'Very Low';
+  const abs = tpsa < 60 ? 'High' : tpsa < 120 ? 'Moderate' : 'Low';
+  const met = rb > 8 || logp > 4 ? 'Labile' : 'Stable';
+  const tox = (mw > 600 || logp > 5) ? 'Flagged' : 'Low Risk';
+  const perm = tpsa < 90 && mw < 500 ? 'High' : 'Moderate';
+  const halfLife = mw < 300 ? 'Short (<2h)' : mw < 500 ? 'Medium (2-6h)' : 'Long (>6h)';
+
+  const grade = (v) => {
+    const pos = ['High','Penetrant','Stable','Low Risk','High'];
+    return pos.includes(v) ? 'ok' : v === 'Flagged' || v === 'Very Low' || v === 'Non-penetrant' ? 'bad' : 'warn';
+  };
+
+  return [
+    { label: 'Oral Bioavailability', val: bioav, grade: grade(bioav) },
+    { label: 'CNS Penetration', val: cns, grade: grade(cns) },
+    { label: 'Aqueous Solubility', val: sol, grade: grade(sol) },
+    { label: 'GI Absorption', val: abs, grade: grade(abs) },
+    { label: 'Metabolic Stability', val: met, grade: grade(met) },
+    { label: 'Toxicity Risk', val: tox, grade: grade(tox) },
+    { label: 'Membrane Permeability', val: perm, grade: grade(perm) },
+    { label: 'Estimated Half-life', val: halfLife, grade: 'ok' },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOLECULAR ESTIMATES (when PubChem data missing)
+// ═══════════════════════════════════════════════════════════════
+function estimateMW(smiles) {
+  const masses = {C:12,N:14,O:16,S:32,P:31,F:19,Cl:35.5,Br:80,I:127,H:1};
+  let mw = 0;
+  const atoms = smiles.match(/[A-Z][a-z]?|[0-9]+/g) || [];
+  for (const a of atoms) {
+    if (masses[a]) mw += masses[a];
+    else if (/^[0-9]+$/.test(a)) { /* repeat */ }
+  }
+  return mw || null;
+}
+
+function estimateLogP(smiles) {
+  // Very rough Crippen-like estimate
+  let logp = 0;
+  logp += (smiles.match(/c/g)||[]).length * 0.13;
+  logp += (smiles.match(/C(?![a-z=])/g)||[]).length * 0.2;
+  logp -= (smiles.match(/O/g)||[]).length * 0.67;
+  logp -= (smiles.match(/N/g)||[]).length * 0.2;
+  logp += (smiles.match(/Cl|Br|F/g)||[]).length * 0.8;
+  return Math.round(logp*100)/100;
+}
+
+function countRings(smiles) { return (smiles.match(/[0-9]/g)||[]).length/2|0; }
+function countAromaticRings(smiles) { return (smiles.match(/c1/g)||[]).length; }
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll(d) {
+  console.log('renderAll called with data:', d);
+  renderBanner(d);
+  renderOverview(d);
+  renderStereo(d);
+  renderProps(d);
+  renderStructure(d);
+  renderADMET(d);
+  renderFGroups(d);
+  renderIDs(d);
+  updateTabCounts(d);
+}
+
+// BANNER
+function renderBanner(d) {
+  document.getElementById('r-name').textContent = d.name || d.raw;
+  const smilesEl = document.getElementById('r-smiles');
+  smilesEl.textContent = d.smiles;
+  smilesEl.title = 'Click to copy';
+
+  const p = d.props;
+  const s = d.stereo;
+  const tags = document.getElementById('r-tags');
+  tags.innerHTML = [
+    `<span class="tag tag-cyan">MW: ${p.mw ? (+p.mw).toFixed(2) : '?'} Da</span>`,
+    d.formula ? `<span class="tag tag-lime">${d.formula}</span>` : '',
+    s.is_chiral ? `<span class="tag tag-amber">⬡ ${s.total_chiral_centers} stereocenters</span>` : `<span class="tag tag-violet">Achiral</span>`,
+    d.lipinski?.passes ? `<span class="tag tag-lime">✓ Ro5</span>` : `<span class="tag tag-rose">✗ Ro5</span>`,
+    s.descriptor !== 'Achiral' ? `<span class="tag tag-amber">${s.descriptor}</span>` : '',
+  ].filter(Boolean).join('');
+}
+
+// OVERVIEW
+function renderOverview(d) {
+  // 2D
+  render2D(d.img2dUrl, d.cid, 'struct2d');
+
+  // 3D
+  render3D(d.sdf3d, 'v3d', 'viewer');
+
+  // Quick stats
+  const p = d.props, s = d.stereo;
+  const qs = [
+    { l: 'Formula', v: d.formula || '?' },
+    { l: 'MW', v: p.mw ? (+p.mw).toFixed(2)+' Da' : '?' },
+    { l: 'LogP', v: p.logp != null ? (+p.logp).toFixed(2) : '?' },
+    { l: 'TPSA', v: p.tpsa != null ? (+p.tpsa).toFixed(1)+' Å²' : '?' },
+    { l: 'HBD / HBA', v: `${p.hbd ?? '?'} / ${p.hba ?? '?'}` },
+    { l: 'Rot. Bonds', v: p.rotBonds ?? '?' },
+    { l: 'Stereocenters', v: s.total_chiral_centers },
+    { l: 'Rings', v: p.rings ?? '?' },
+  ];
+  document.getElementById('quick-stats').innerHTML = qs.map(q => `
+    <div style="background:var(--dark);border:1px solid var(--rim);border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:0.65rem;font-family:var(--font-mono);color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">${q.l}</div>
+      <div style="font-family:var(--font-mono);font-weight:700;font-size:0.95rem">${q.v}</div>
+    </div>`).join('');
+
+  // Stereo snapshot
+  renderStereoHero('ov-stereo-hero', d.stereo);
+  renderChiralList('ov-chiral-list', d.stereo);
+  document.getElementById('ov-stereo-desc').textContent = d.stereo.descriptor;
+}
+
+// STEREO
+function renderStereo(d) {
+  renderStereoHero('st-hero', d.stereo);
+  document.getElementById('st-total-badge').textContent = `${d.stereo.total_chiral_centers} centers`;
+  renderChiralList('st-chiral-list', d.stereo);
+
+  // EZ
+  const ezEl = document.getElementById('st-ez-list');
+  if (!d.stereo.ez_bonds.length) {
+    ezEl.innerHTML = `<div style="color:var(--ink3);font-size:0.82rem;font-family:var(--font-mono);padding:1rem;text-align:center">No E/Z double bonds detected</div>`;
+  } else {
+    ezEl.innerHTML = d.stereo.ez_bonds.map(b => `
+      <div class="ez-item">
+        <span class="ez-tag ez-${b.stereo}">${b.stereo}</span>
+        <span style="color:var(--ink3);font-family:var(--font-mono);font-size:0.78rem">
+          Bond ${b.bond_index} &nbsp;·&nbsp; ${b.stereo === 'E' ? 'Entgegen (opposite sides)' : 'Zusammen (same side)'}
+        </span>
+      </div>`).join('');
+  }
+
+  // Isomer info
+  const s = d.stereo;
+  document.getElementById('st-isomer-info').innerHTML = `
+    <div style="display:grid;gap:10px">
+      <div style="background:var(--dark);border:1px solid var(--rim);border-radius:10px;padding:1rem">
+        <div style="font-size:0.7rem;color:var(--ink3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Maximum Possible Stereoisomers</div>
+        <div style="font-family:var(--font-mono);font-size:2rem;font-weight:700;color:var(--amber)">2<sup style="font-size:1rem">${s.total_chiral_centers}</sup> = ${s.max_stereoisomers}</div>
+      </div>
+      <div style="background:var(--dark);border:1px solid var(--rim);border-radius:10px;padding:1rem">
+        <div style="font-size:0.7rem;color:var(--ink3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Configuration</div>
+        <div style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--neon)">${s.descriptor}</div>
+      </div>
+      <div style="background:var(--dark);border:1px solid var(--rim);border-radius:10px;padding:1rem;font-size:0.8rem;color:var(--ink3);line-height:1.7">
+        ${s.is_chiral
+          ? `This molecule has <strong style="color:var(--ink)">${s.total_chiral_centers}</strong> defined stereocenter${s.total_chiral_centers>1?'s':''}, 
+             giving up to <strong style="color:var(--amber)">${s.max_stereoisomers}</strong> possible stereoisomer${s.max_stereoisomers>1?'s':''}.
+             ${s.r_centers} <span style="color:var(--r-col)">R</span> and ${s.s_centers} <span style="color:var(--s-col)">S</span> centers detected.`
+          : `This molecule has no detectable stereocenters and is achiral. It is superimposable on its mirror image.`}
+      </div>
+    </div>`;
+}
+
+function renderStereoHero(elId, s) {
+  document.getElementById(elId).innerHTML = `
+    <div class="sh-card"><div class="sh-num" style="color:var(--r-col)">${s.r_centers}</div><div class="sh-lbl">R Centers</div></div>
+    <div class="sh-card"><div class="sh-num" style="color:var(--s-col)">${s.s_centers}</div><div class="sh-lbl">S Centers</div></div>
+    <div class="sh-card"><div class="sh-num" style="color:var(--ez-e)">${s.e_bonds}</div><div class="sh-lbl">E Bonds</div></div>
+    <div class="sh-card"><div class="sh-num" style="color:var(--ez-z)">${s.z_bonds}</div><div class="sh-lbl">Z Bonds</div></div>`;
+}
+
+function renderChiralList(elId, s) {
+  const el = document.getElementById(elId);
+  if (!s.chiral_centers.length) {
+    el.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:0.85rem">
+      <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.3">⬡</div>
+      No chiral centers detected — achiral molecule
+    </div>`;
+    return;
+  }
+  el.innerHTML = s.chiral_centers.map((c,i) => `
+    <div class="cc-item">
+      <div class="cc-badge cc-${c.cip_code === '?' ? 'U' : c.cip_code}">${c.cip_code === '?' ? '?' : c.cip_code}</div>
+      <div class="cc-info">
+        <div class="cc-title">Atom ${c.atom_index} · ${c.symbol} ${i+1}</div>
+        <div class="cc-sub">
+          Config: ${c.cip_code === 'R' ? 'R (Rectus — clockwise)' : c.cip_code === 'S' ? 'S (Sinister — counterclockwise)' : 'Unassigned'} &nbsp;·&nbsp;
+          Tag: ${c.chiral_tag}
+          ${c.neighbors[0] !== '?' ? ' &nbsp;·&nbsp; Neighbors: '+c.neighbors.join(', ') : ''}
+        </div>
+        <div class="cc-explain">
+          ${c.cip_code === 'R'
+            ? 'Priority 1→2→3 rotation is CLOCKWISE when lowest-priority group points away'
+            : c.cip_code === 'S'
+            ? 'Priority 1→2→3 rotation is COUNTERCLOCKWISE when lowest-priority group points away'
+            : 'Stereochemistry at this center is unspecified in the input'}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// PROPERTIES
+function renderProps(d) {
+  const p = d.props;
+  const items = [
+    { l: 'Molecular Weight', v: p.mw ? (+p.mw).toFixed(4) : '?', u: 'Da' },
+    { l: 'Exact Mass', v: p.exactMass ? (+p.exactMass).toFixed(6) : '?', u: 'Da' },
+    { l: 'XLogP', v: p.logp != null ? (+p.logp).toFixed(3) : '?', u: '' },
+    { l: 'TPSA', v: p.tpsa != null ? (+p.tpsa).toFixed(2) : '?', u: 'Å²' },
+    { l: 'H-Bond Donors', v: p.hbd ?? '?', u: '' },
+    { l: 'H-Bond Acceptors', v: p.hba ?? '?', u: '' },
+    { l: 'Rotatable Bonds', v: p.rotBonds ?? '?', u: '' },
+    { l: 'Ring Count', v: p.rings ?? '?', u: '' },
+    { l: 'Aromatic Rings', v: p.aromaticRings ?? '?', u: '' },
+    { l: 'Heavy Atoms', v: p.heavyAtoms ?? '?', u: '' },
+    { l: 'Complexity', v: p.complexity ? Math.round(p.complexity) : '?', u: '' },
+    { l: 'Stereocenters', v: d.stereo.total_chiral_centers, u: '' },
+  ];
+
+  document.getElementById('phys-props').innerHTML = items.map(i => `
+    <div class="prop-card">
+      <div class="prop-lbl">${i.l}</div>
+      <div class="prop-val">${i.v}<span class="prop-unit">${i.u}</span></div>
+    </div>`).join('');
+
+  // Lipinski
+  const lip = lipinskiData(p);
+  document.getElementById('lip-grid').innerHTML = lip.map(r => `
+    <div class="lip-item">
+      <span class="${r.ok ? 'lip-ok' : 'lip-fail'}">${r.ok ? '✓' : '✗'}</span>
+      ${r.label}
+    </div>`).join('');
+
+  const passes = lip.filter(r=>r.ok).length;
+  const vEl = document.getElementById('lip-verdict');
+  vEl.style.background = passes >= 4 ? 'rgba(168,255,62,0.08)' : passes >= 3 ? 'rgba(255,179,64,0.08)' : 'rgba(255,77,109,0.08)';
+  vEl.style.border = `1px solid ${passes >= 4 ? 'rgba(168,255,62,0.2)' : passes >= 3 ? 'rgba(255,179,64,0.2)' : 'rgba(255,77,109,0.2)'}`;
+  vEl.style.color = passes >= 4 ? 'var(--lime)' : passes >= 3 ? 'var(--amber)' : 'var(--rose)';
+  vEl.textContent = passes >= 4 ? `✓ Fully drug-like (${passes}/4 rules passed)` : passes >= 3 ? `~ Mostly drug-like (${passes}/4 rules passed)` : `✗ Poor drug-likeness (${passes}/4 rules passed)`;
+
+  // Extended rules
+  const veber = (p.rotBonds||0) <= 10 && (p.tpsa||0) <= 140;
+  const egan = (p.tpsa||0) <= 132 && (p.logp||0) <= 5.88;
+  const ghose = (p.logp||0) >= -0.4 && (p.logp||0) <= 5.6 && (p.mw||0) >= 160 && (p.mw||0) <= 480;
+  document.getElementById('ext-rules').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${[
+        { n: 'Veber (oral bioavailability)', ok: veber, desc: 'Rot. bonds ≤ 10 and TPSA ≤ 140 Å²' },
+        { n: 'Egan (absorption)', ok: egan, desc: 'TPSA ≤ 132 Å² and LogP ≤ 5.88' },
+        { n: 'Ghose (lead-likeness)', ok: ghose, desc: 'LogP −0.4–5.6, MW 160–480 Da' },
+        { n: 'CNS MPO', ok: (p.tpsa||0)<90&&(p.logp||0)<5&&(p.mw||0)<450, desc: 'TPSA < 90, LogP < 5, MW < 450' },
+      ].map(r => `
+        <div style="background:var(--dark);border:1px solid var(--rim);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start">
+          <span style="color:${r.ok?'var(--lime)':'var(--rose)'}; flex-shrink:0; margin-top:1px">${r.ok?'✓':'✗'}</span>
+          <div>
+            <div style="font-size:0.82rem;font-weight:600;margin-bottom:2px">${r.n}</div>
+            <div style="font-size:0.72rem;color:var(--ink3);font-family:var(--font-mono)">${r.desc}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // Radar chart
+  renderRadar(p);
+}
+
+function lipinskiData(p) {
+  return [
+    { label: `MW ≤ 500 (${(+(p.mw||0)).toFixed(1)})`, ok: (p.mw||0) <= 500 },
+    { label: `LogP ≤ 5 (${(+(p.logp||0)).toFixed(2)})`, ok: (p.logp||0) <= 5 },
+    { label: `HBD ≤ 5 (${p.hbd||0})`, ok: (p.hbd||0) <= 5 },
+    { label: `HBA ≤ 10 (${p.hba||0})`, ok: (p.hba||0) <= 10 },
+  ];
+}
+
+function lipinskiPasses(p) { return lipinskiData(p).filter(r=>r.ok).length >= 3; }
+
+function renderRadar(p) {
+  const ctx = document.getElementById('radar-chart');
+  if (radarChart) radarChart.destroy();
+  // Normalize each property 0-1
+  const mwN = Math.min((p.mw||300)/600, 1);
+  const logpN = Math.max(0, Math.min(((p.logp||2)+2)/8, 1));
+  const tpsaN = Math.min((p.tpsa||80)/200, 1);
+  const hbdN = Math.min((p.hbd||2)/10, 1);
+  const hbaN = Math.min((p.hba||5)/15, 1);
+  const rbN = Math.min((p.rotBonds||5)/15, 1);
+
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['MW', 'LogP', 'TPSA', 'HBD', 'HBA', 'Rot.Bonds'],
+      datasets: [{
+        label: 'Molecule',
+        data: [mwN, logpN, tpsaN, hbdN, hbaN, rbN],
+        backgroundColor: 'rgba(0,229,255,0.12)',
+        borderColor: 'rgba(0,229,255,0.7)',
+        pointBackgroundColor: 'rgba(0,229,255,0.9)',
+        pointRadius: 4,
+        borderWidth: 1.5,
+      }, {
+        label: 'Ideal drug-like',
+        data: [500/600, 3/8, 90/200, 2/10, 5/15, 5/15],
+        backgroundColor: 'rgba(168,255,62,0.06)',
+        borderColor: 'rgba(168,255,62,0.4)',
+        pointBackgroundColor: 'rgba(168,255,62,0.8)',
+        pointRadius: 3,
+        borderWidth: 1,
+        borderDash: [4,4],
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: {
+        min: 0, max: 1,
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        angleLines: { color: 'rgba(255,255,255,0.06)' },
+        pointLabels: { color: '#9fa5c0', font: { family: "'Space Mono',monospace", size: 11 } },
+        ticks: { display: false }
+      }},
+      plugins: {
+        legend: { labels: { color: '#9fa5c0', font: { size: 11 }, boxWidth: 12 } }
+      }
+    }
+  });
+}
+
+// STRUCTURE VIEW
+function renderStructure(d) {
+  // Use backend molblock for 3D
+  render3D(d._backend?.data?.molblock || null, 'v3d-full', 'viewerFull');
+
+  // Formula
+  const f = d.formula || d.props.formula || '?';
+  document.getElementById('formula-big').innerHTML =
+    f.replace(/([A-Za-z]+)([0-9]+)/g, '$1<sub>$2</sub>');
+}
+
+// ADMET
+function renderADMET(d) {
+  document.getElementById('admet-grid').innerHTML = d.admet.map(a => `
+    <div class="admet-card">
+      <div class="admet-val" style="color:${a.grade==='ok'?'var(--lime)':a.grade==='warn'?'var(--amber)':'var(--rose)'}">${a.val}</div>
+      <div class="admet-lbl">${a.label}</div>
+      <div class="admet-status admet-${a.grade}">${a.grade==='ok'?'Favorable':a.grade==='warn'?'Moderate':'Unfavorable'}</div>
+    </div>`).join('');
+
+  // Property bar chart
+  renderPropChart(d.props);
+}
+
+function renderPropChart(p) {
+  const ctx = document.getElementById('prop-chart');
+  if (propChart) propChart.destroy();
+  const vals = [p.mw||0, (p.logp||0)*50, p.tpsa||0, (p.hbd||0)*50, (p.hba||0)*30, (p.rotBonds||0)*15];
+  const labels = ['MW (Da)', 'LogP ×50', 'TPSA (Å²)', 'HBD ×50', 'HBA ×30', 'RotBonds ×15'];
+  const thresholds = [500, 250, 140, 250, 300, 150];
+
+  propChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Value', data: vals, backgroundColor: vals.map((v,i) => v > thresholds[i] ? 'rgba(255,77,109,0.6)' : 'rgba(0,229,255,0.6)'), borderRadius: 6, borderSkipped: false },
+        { label: 'Threshold', data: thresholds, type: 'line', borderColor: 'rgba(168,255,62,0.5)', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#9fa5c0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#9fa5c0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      },
+      plugins: { legend: { labels: { color: '#9fa5c0', font: { size: 11 }, boxWidth: 12 } } }
+    }
+  });
+}
+
+// FUNCTIONAL GROUPS
+function renderFGroups(d) {
+  const el = document.getElementById('fg-wrap');
+  if (!d.fgroups.length) {
+    el.innerHTML = '<span style="color:var(--ink3);font-size:0.85rem">No common functional groups detected</span>';
+  } else {
+    el.innerHTML = d.fgroups.map(g => `
+      <div class="fg-card">
+        <span class="fg-name">${g.name}</span>
+        <span class="fg-cnt">×${g.count}</span>
+      </div>`).join('');
+  }
+
+  // Reference
+  document.getElementById('fg-ref').innerHTML = FG_DEFS.map(g => `
+    <div style="background:var(--dark);border:1px solid var(--rim);border-radius:8px;padding:8px 12px;font-size:0.78rem">
+      <span style="color:var(--ink2);font-weight:500">${g.name}</span>
+    </div>`).join('');
+}
+
+// IDENTIFIERS
+function renderIDs(d) {
+  const p = d.props;
+  const rows = [
+    ['Compound Name', d.name || '—'],
+    ['IUPAC Name', d.iupac || '—'],
+    ['PubChem CID', d.cid ? `${d.cid}` : '—'],
+    ['Canonical SMILES', d.smiles],
+    ['Isomeric SMILES', p.isoSmiles || d.smiles],
+    ['InChI', p.inchi || '—'],
+    ['InChIKey', p.inchikey || '—'],
+    ['Molecular Formula', d.formula || p.formula || '—'],
+  ];
+
+  document.getElementById('id-rows').innerHTML = rows.map(([k,v]) => `
+    <div class="id-row">
+      <span class="id-key">${k}</span>
+      <span class="id-val">${esc(v)}</span>
+      <button class="id-copy" onclick="copyText('${esc(v)}')" title="Copy">⧉</button>
+    </div>`).join('');
+}
+
+// TAB COUNTS
+function updateTabCounts(d) {
+  document.getElementById('stab-stereo-cnt').textContent = d.stereo.total_chiral_centers;
+  document.getElementById('stab-fg-cnt').textContent = d.fgroups.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 2D RENDERER
+// ═══════════════════════════════════════════════════════════════
+function render2D(imgUrl, cid, elId) {
+  const el = document.getElementById(elId);
+  if (imgUrl) {
+    el.innerHTML = `
+      <img src="${imgUrl}" alt="2D Structure"
+        style="max-width:100%;max-height:100%;border-radius:8px;filter:invert(1) hue-rotate(180deg)"
+        onerror="this.parentElement.innerHTML='<span style=color:var(--ink3);font-size:.85rem>Structure unavailable</span>'"/>
+      <div class="struct-note">PubChem · CID ${cid || '?'}</div>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--ink3);font-size:0.85rem">Structure unavailable for SMILES input</span>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D RENDERER
+// ═══════════════════════════════════════════════════════════════
+function render3D(sdf, elId, viewerVar) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if (!sdf) {
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink3);font-size:0.85rem">3D unavailable — name search required for 3D data</div>';
+    return;
+  }
+  try {
+    const v = $3Dmol.createViewer(el, { backgroundColor: '#030407', antialias: true });
+    v.addModel(sdf, 'sdf');
+    v.setStyle({}, { stick: { radius: 0.12 } });
+    v.zoomTo();
+    v.render();
+    if (viewerVar === 'viewer') viewer = v;
+    else viewerFull = v;
+  } catch {
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink3)">3D rendering failed</div>';
+  }
+}
+
+function v3style(s) {
+  if (!viewer) return;
+  ['stick','sphere','line','cross','surf','spin'].forEach(x => document.getElementById(`vb-${x}`)?.classList.remove('on'));
+  document.getElementById(`vb-${s}`)?.classList.add('on');
+  clearInterval(spinInterval); spinInterval = null;
+  viewer.setStyle({});
+  if (s === 'stick') viewer.setStyle({}, { stick: { radius: 0.12, colorscheme: 'default' } });
+  else if (s === 'sphere') viewer.setStyle({}, { sphere: { scale: 0.35 } });
+  else if (s === 'line') viewer.setStyle({}, { line: {} });
+  else if (s === 'cross') viewer.setStyle({}, { cross: { lineWidth: 5, colorscheme: 'default' } });
+  else if (s === 'surf') {
+    viewer.setStyle({}, { stick: { radius: 0.08 } });
+    viewer.addSurface($3Dmol.SurfaceType.VDW, { opacity: 0.65, colorscheme: { gradient: 'rwb', min:-1, max:1 } });
+  }
+  viewer.render();
+}
+
+function v3spin() {
+  if (spinInterval) { clearInterval(spinInterval); spinInterval = null; document.getElementById('vb-spin').classList.remove('on'); return; }
+  document.getElementById('vb-spin').classList.add('on');
+  spinInterval = setInterval(() => { if (viewer) viewer.rotate(1, 'y'); }, 50);
+}
+
+function v3fstyle(s) {
+  if (!viewerFull) return;
+  ['stick','sphere','line','surf'].forEach(x => document.getElementById(`vbf-${x}`)?.classList.remove('on'));
+  document.getElementById(`vbf-${s}`)?.classList.add('on');
+  clearInterval(spinFInterval); spinFInterval = null;
+  viewerFull.setStyle({});
+  viewerFull.removeAllSurfaces();
+  if (s === 'stick') viewerFull.setStyle({}, { stick: { radius: 0.14, colorscheme: 'default' } });
+  else if (s === 'sphere') viewerFull.setStyle({}, { sphere: { scale: 0.35 } });
+  else if (s === 'line') viewerFull.setStyle({}, { line: {} });
+  else if (s === 'surf') {
+    viewerFull.setStyle({}, { stick: { radius: 0.08 } });
+    viewerFull.addSurface($3Dmol.SurfaceType.VDW, { opacity: 0.65, colorscheme: { gradient: 'rwb', min:-1, max:1 } });
+  }
+  viewerFull.render();
+}
+
+function v3fspin() {
+  if (spinFInterval) { clearInterval(spinFInterval); spinFInterval = null; document.getElementById('vbf-spin').classList.remove('on'); return; }
+  document.getElementById('vbf-spin').classList.add('on');
+  spinFInterval = setInterval(() => { if (viewerFull) viewerFull.rotate(1, 'y'); }, 50);
+}
+
+function v3flabel() {
+  if (!viewerFull) return;
+  v3labels = !v3labels;
+  document.getElementById('vbf-label').classList.toggle('on', v3labels);
+  if (v3labels) viewerFull.addPropertyLabels('elem', {}, { fontColor: 'white', fontSize: 10, showBackground: false });
+  else viewerFull.removeAllLabels();
+  viewerFull.render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════════════════════════════
+async function doCompare() {
+  const a = document.getElementById('cmp-a').value.trim();
+  const b = document.getElementById('cmp-b').value.trim();
+  if (!a || !b) { toast('Enter both compound names or SMILES'); return; }
+
+  document.getElementById('cmp-btn').disabled = true;
+  document.getElementById('cmp-loading').classList.add('show');
+  document.getElementById('cmp-results').innerHTML = '';
+  document.getElementById('cmp-diff-panel').style.display = 'none';
+
+  try {
+    const [dA, dB] = await Promise.all([fetchCompare(a), fetchCompare(b)]);
+    document.getElementById('cmp-loading').classList.remove('show');
+    renderCompare(dA, dB);
+  } catch (e) {
+    document.getElementById('cmp-loading').classList.remove('show');
+    toast('Compare failed: ' + e.message);
+  }
+  document.getElementById('cmp-btn').disabled = false;
+}
+
+async function fetchCompare(q) {
+  const smiles_q = isSMILES(q);
+  const route = smiles_q ? `smiles/${encodeURIComponent(q)}` : `name/${encodeURIComponent(q)}`;
+  const fields = 'MolecularFormula,MolecularWeight,ExactMass,XLogP,TPSA,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,HeavyAtomCount,IsomericSMILES,InChIKey';
+  const r = await fetch(`${PUBCHEM}/compound/${route}/property/${fields}/JSON`);
+  if (!r.ok) throw new Error(`"${q}" not found`);
+  const d = await r.json();
+  const p = d.PropertyTable.Properties[0];
+  const stereo = analyzeStereo(p.IsomericSMILES || '');
+  return { name: q, formula: p.MolecularFormula, p, stereo, smiles: p.IsomericSMILES, cid: p.CID,
+    imgUrl: p.CID ? `${PUBCHEM}/compound/cid/${p.CID}/PNG?record_type=2d&image_size=400x280` : null };
+}
+
+function renderCompare(dA, dB) {
+  const pA = dA.p, pB = dB.p;
+  const compareRows = [
+    { k: 'Formula', vA: dA.formula, vB: dB.formula, fmt: v=>v },
+    { k: 'MW', vA: pA.MolecularWeight, vB: pB.MolecularWeight, unit:'Da', better:'low' },
+    { k: 'LogP', vA: pA.XLogP, vB: pB.XLogP, better:'low' },
+    { k: 'TPSA', vA: pA.TPSA, vB: pB.TPSA, unit:'Å²', better:'low' },
+    { k: 'HBD', vA: pA.HBondDonorCount, vB: pB.HBondDonorCount, better:'low' },
+    { k: 'HBA', vA: pA.HBondAcceptorCount, vB: pB.HBondAcceptorCount, better:'low' },
+    { k: 'Rot. Bonds', vA: pA.RotatableBondCount, vB: pB.RotatableBondCount, better:'low' },
+    { k: 'Heavy Atoms', vA: pA.HeavyAtomCount, vB: pB.HeavyAtomCount, better:'low' },
+    { k: 'Stereocenters', vA: dA.stereo.total_chiral_centers, vB: dB.stereo.total_chiral_centers },
+    { k: 'Config', vA: dA.stereo.descriptor, vB: dB.stereo.descriptor, fmt: v=>v },
+  ];
+
+  function cardHTML(d) {
+    const pA_ = dA.p, pB_ = dB.p;
+    const isA = d === dA;
+    const other = isA ? dB : dA;
+    return `<div class="cmp-card">
+      <div class="cmp-hd">
+        <div class="cmp-molecule">${d.name}</div>
+        <div class="cmp-formula">${d.formula || '?'}</div>
+      </div>
+      <div class="cmp-body">
+        <div style="background:#030407;border-radius:8px;min-height:150px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;overflow:hidden">
+          ${d.imgUrl
+            ? `<img src="${d.imgUrl}" style="max-width:100%;max-height:160px;filter:invert(1) hue-rotate(180deg)" onerror="this.style.display='none'"/>`
+            : '<span style="color:var(--ink3);font-size:.8rem">No structure</span>'}
+        </div>
+        ${compareRows.map(r => {
+          const va = r.vA, vb = r.vB;
+          const myVal = isA ? va : vb;
+          const otherVal = isA ? vb : va;
+          let cls = '';
+          if (r.better && typeof myVal === 'number' && typeof otherVal === 'number') {
+            cls = r.better === 'low'
+              ? (myVal <= otherVal ? 'hi' : 'lo')
+              : (myVal >= otherVal ? 'hi' : 'lo');
+          }
+          const fmt = r.fmt || (v => v != null ? (+v).toFixed ? (+v).toFixed(2) : v : '?');
+          return `<div class="cmp-row">
+            <span class="cmp-rk">${r.k}</span>
+            <span class="cmp-rv ${cls}">${fmt(myVal)}${r.unit?' '+r.unit:''}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('cmp-results').innerHTML = cardHTML(dA) + cardHTML(dB);
+
+  // Diff chart
+  renderDiffChart(dA, dB);
+  document.getElementById('cmp-diff-panel').style.display = 'block';
+}
+
+function renderDiffChart(dA, dB) {
+  const ctx = document.getElementById('diff-chart');
+  if (diffChart) diffChart.destroy();
+  const labels = ['MW (/10)', 'LogP ×10', 'TPSA', 'HBD ×20', 'HBA ×15', 'RotBonds ×10'];
+  const dataA = [
+    (dA.p.MolecularWeight||0)/10,
+    (dA.p.XLogP||0)*10,
+    dA.p.TPSA||0,
+    (dA.p.HBondDonorCount||0)*20,
+    (dA.p.HBondAcceptorCount||0)*15,
+    (dA.p.RotatableBondCount||0)*10,
+  ];
+  const dataB = [
+    (dB.p.MolecularWeight||0)/10,
+    (dB.p.XLogP||0)*10,
+    dB.p.TPSA||0,
+    (dB.p.HBondDonorCount||0)*20,
+    (dB.p.HBondAcceptorCount||0)*15,
+    (dB.p.RotatableBondCount||0)*10,
+  ];
+  diffChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: dA.name, data: dataA, backgroundColor: 'rgba(0,229,255,0.55)', borderRadius: 6, borderSkipped: false },
+        { label: dB.name, data: dataB, backgroundColor: 'rgba(168,255,62,0.55)', borderRadius: 6, borderSkipped: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks:{color:'#9fa5c0',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'} },
+        y: { ticks:{color:'#9fa5c0',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'} }
+      },
+      plugins: { legend:{labels:{color:'#9fa5c0',font:{size:11},boxWidth:12}} }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+function showPanel(p) {
+  ['loading-panel','error-panel'].forEach(id => document.getElementById(id).classList.remove('show'));
+  if (p === 'loading') document.getElementById('loading-panel').classList.add('show');
+  if (p === 'error') document.getElementById('error-panel').classList.add('show');
+}
+
+function hideResults() { document.getElementById('results').classList.remove('show'); }
+function showResults() { document.getElementById('results').classList.add('show'); }
+
+function scrollToState() {
+  document.getElementById('loading-panel').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function setStep(n, state) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`ls-${i}`);
+    if (!el) continue;
+    el.classList.remove('active','done');
+    const icon = el.querySelector('.step-icon');
+    if (i < n) { el.classList.add('done'); if (icon) icon.textContent = '✓'; }
+    else if (i === n) { el.classList.add(state||'active'); if (icon) icon.textContent = state==='done'?'✓':'◉'; }
+    else { if (icon) icon.textContent = '○'; }
+  }
+}
+
+function showSec(id) {
+  document.querySelectorAll('.sec-view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`sec-${id}`)?.classList.add('active');
+  event?.target?.classList.add('active');
+  // Trigger resize for charts on tab switch
+  setTimeout(() => { radarChart?.resize(); propChart?.resize(); }, 50);
+}
+
+function showPage(p) {
+  ['analyze','compare','learn'].forEach(id => {
+    const el = document.getElementById(`page-${id}`);
+    if (el) el.style.display = id === p ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['analyze','compare','learn'][i] === p);
+  });
+  if (p === 'compare') { setTimeout(() => { diffChart?.resize(); }, 100); }
+}
+
+function toggleOpt(k) {
+  opts[k] = !opts[k];
+  document.getElementById(`sw-${k}`)?.classList.toggle('on', opts[k]);
+}
+
+function q(v) { document.getElementById('query').value = v; doAnalyze(); }
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════════════
+function addHistory(q) {
+  history = [q, ...history.filter(h => h !== q)].slice(0, 10);
+  try { localStorage.setItem('cc_hist', JSON.stringify(history)); } catch {}
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('hist-strip');
+  if (!el || !history.length) { if (el) el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <span style="font-size:0.7rem;color:var(--ink3);font-family:var(--font-mono);align-self:center;flex-shrink:0">Recent:</span>
+    ${history.map(h => `
+      <div class="hist-pill" onclick="q('${esc(h)}')">
+        <span class="hi">⬡</span>${h}
+        <span class="hx" onclick="removeHist(event,'${esc(h)}')">✕</span>
+      </div>`).join('')}`;
+}
+
+function removeHist(e, h) {
+  e.stopPropagation();
+  history = history.filter(x => x !== h);
+  try { localStorage.setItem('cc_hist', JSON.stringify(history)); } catch {}
+  renderHistory();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOWNLOADS
+// ═══════════════════════════════════════════════════════════════
+function downloadJSON() {
+  if (!DATA) return;
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+  dlBlob(blob, `${safeName(DATA.name)}_analysis.json`);
+  toast('JSON downloaded');
+}
+
+function downloadReport() {
+  if (!DATA) return;
+  const d = DATA, p = d.props, s = d.stereo;
+  const txt = `
+ChiralChem — Molecular Analysis Report
+Generated: ${new Date().toLocaleString()}
+${'═'.repeat(60)}
+
+COMPOUND INFORMATION
+${'─'.repeat(40)}
+Name:             ${d.name}
+IUPAC:            ${d.iupac || '—'}
+PubChem CID:      ${d.cid || '—'}
+SMILES:           ${d.smiles}
+InChI:            ${p.inchi || '—'}
+InChIKey:         ${p.inchikey || '—'}
+Formula:          ${d.formula || '—'}
+
+PHYSICAL PROPERTIES
+${'─'.repeat(40)}
+Molecular Weight: ${p.mw ? (+p.mw).toFixed(4) : '?'} Da
+Exact Mass:       ${p.exactMass ? (+p.exactMass).toFixed(6) : '?'} Da
+XLogP:            ${p.logp != null ? (+p.logp).toFixed(4) : '?'}
+TPSA:             ${p.tpsa != null ? (+p.tpsa).toFixed(4) : '?'} Å²
+H-Bond Donors:    ${p.hbd ?? '?'}
+H-Bond Acceptors: ${p.hba ?? '?'}
+Rotatable Bonds:  ${p.rotBonds ?? '?'}
+Ring Count:       ${p.rings ?? '?'}
+Heavy Atoms:      ${p.heavyAtoms ?? '?'}
+Complexity:       ${p.complexity ?? '?'}
+
+DRUG-LIKENESS (LIPINSKI RO5)
+${'─'.repeat(40)}
+MW ≤ 500:         ${(p.mw||0)<=500 ? 'PASS' : 'FAIL'} (${(+(p.mw||0)).toFixed(1)} Da)
+LogP ≤ 5:         ${(p.logp||0)<=5 ? 'PASS' : 'FAIL'} (${(+(p.logp||0)).toFixed(2)})
+HBD ≤ 5:          ${(p.hbd||0)<=5 ? 'PASS' : 'FAIL'} (${p.hbd||0})
+HBA ≤ 10:         ${(p.hba||0)<=10 ? 'PASS' : 'FAIL'} (${p.hba||0})
+Overall:          ${lipinskiPasses(p) ? 'PASS (drug-like)' : 'FAIL'}
+
+STEREOCHEMISTRY
+${'─'.repeat(40)}
+Is Chiral:        ${s.is_chiral ? 'Yes' : 'No'}
+Total Centers:    ${s.total_chiral_centers}
+R Centers:        ${s.r_centers}
+S Centers:        ${s.s_centers}
+E Bonds:          ${s.e_bonds}
+Z Bonds:          ${s.z_bonds}
+Max Stereoisomers:${s.max_stereoisomers}
+Configuration:    ${s.descriptor}
+
+CHIRAL CENTERS
+${'─'.repeat(40)}
+${s.chiral_centers.length
+  ? s.chiral_centers.map(c => `Atom ${c.atom_index} (${c.symbol}): ${c.cip_code} configuration [${c.chiral_tag}]`).join('\n')
+  : 'None — achiral molecule'}
+
+FUNCTIONAL GROUPS
+${'─'.repeat(40)}
+${d.fgroups.length ? d.fgroups.map(g=>`${g.name}: ×${g.count}`).join('\n') : 'None detected'}
+
+ADMET PREDICTIONS
+${'─'.repeat(40)}
+${d.admet.map(a=>`${a.label.padEnd(28)}: ${a.val}`).join('\n')}
+`.trim();
+
+  dlBlob(new Blob([txt], {type:'text/plain'}), `${safeName(DATA.name)}_report.txt`);
+  toast('Report downloaded');
+}
+
+function downloadSDF() {
+  if (!DATA?.sdf3d) { toast('No 3D SDF available (use compound name, not SMILES)'); return; }
+  dlBlob(new Blob([DATA.sdf3d], {type:'chemical/x-mdl-sdfile'}), `${safeName(DATA.name)}.sdf`);
+  toast('SDF downloaded');
+}
+
+function downloadSVG() {
+  if (!DATA?.img2dUrl) { toast('No SVG available'); return; }
+  toast('Opening 2D structure in new tab...');
+  window.open(DATA.img2dUrl, '_blank');
+}
+
+function openPubChem() {
+  if (!DATA?.cid) { toast('No PubChem CID — search by name for full data'); return; }
+  window.open(`https://pubchem.ncbi.nlm.nih.gov/compound/${DATA.cid}`, '_blank');
+}
+
+function dlBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function safeName(n) { return (n||'molecule').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,40); }
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function copyText(t) {
+  navigator.clipboard.writeText(t).then(() => toast('Copied!')).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = t; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    toast('Copied!');
+  });
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
